@@ -20,7 +20,7 @@ def registrar(app):
                        COUNT(a.id_alocacao) AS total_aloc
                 FROM turma t
                 JOIN turno tr ON t.id_turno = tr.id_turno
-                LEFT JOIN grade_curricular gc ON gc.id_turma = t.id_turma
+                LEFT JOIN grade_curricular gc ON gc.id_turno = t.id_turno AND gc.serie = t.serie
                 LEFT JOIN alocacao a ON a.id_turma = t.id_turma
                 GROUP BY t.id_turma, t.nome, t.serie, tr.nome
                 ORDER BY tr.nome, t.serie, t.nome
@@ -47,16 +47,16 @@ def registrar(app):
             cursor.execute("""
                 SELECT gc.id_disciplina, gc.aulas_semanais,
                        d.nome AS nome_disciplina, d.sigla, d.cor,
-                       MIN(p.id_professor)          AS id_professor,
-                       MIN(p.nome)                  AS nome_professor,
+                       MIN(p.id_professor)           AS id_professor,
+                       MIN(p.nome)                   AS nome_professor,
                        COUNT(DISTINCT a.id_alocacao) AS ja_alocadas
                 FROM grade_curricular gc
+                JOIN turma t ON gc.id_turno = t.id_turno AND gc.serie = t.serie
                 JOIN disciplina d ON gc.id_disciplina = d.id_disciplina
                 LEFT JOIN professor_disciplina pd ON pd.id_disciplina = gc.id_disciplina
                 LEFT JOIN professor p ON p.id_professor = pd.id_professor AND p.status = 'ativo'
-                LEFT JOIN alocacao a ON a.id_turma = gc.id_turma
-                                    AND a.id_disciplina = gc.id_disciplina
-                WHERE gc.id_turma = %s
+                LEFT JOIN alocacao a ON a.id_turma = t.id_turma AND a.id_disciplina = gc.id_disciplina
+                WHERE t.id_turma = %s
                 GROUP BY gc.id_disciplina, gc.aulas_semanais,
                          d.nome, d.sigla, d.cor
                 ORDER BY d.nome

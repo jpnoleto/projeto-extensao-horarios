@@ -3,22 +3,21 @@
 
 {% block estilos_extra %}
 <style>
-.gc-turma-header {
+.gc-serie-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 22px 0 8px;
+    margin: 28px 0 8px;
     flex-wrap: wrap;
     gap: 10px;
 }
 
-.gc-turma-titulo {
-    font-size: .9rem;
+.gc-serie-label {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    opacity: .45;
     font-weight: 700;
-    color: var(--cor-primaria);
-    display: flex;
-    align-items: center;
-    gap: 10px;
 }
 
 .gc-total-badge {
@@ -35,8 +34,8 @@
 .gc-total-badge.acima { background: #fef2f2; color: var(--cor-erro);    border-color: #fecaca; }
 
 .gc-barra {
-    width: 100px;
-    height: 4px;
+    width: 120px;
+    height: 6px;
     border-radius: 3px;
     background: var(--cor-borda);
     overflow: hidden;
@@ -45,6 +44,13 @@
 .gc-barra-fill { height: 100%; border-radius: 3px; background: var(--cor-primaria); transition: width .3s; }
 .gc-barra-fill.ok    { background: var(--cor-sucesso); }
 .gc-barra-fill.acima { background: var(--cor-erro); }
+
+.td-sub {
+    display: block;
+    font-size: .72rem;
+    opacity: .55;
+    font-weight: 400;
+}
 </style>
 {% endblock %}
 
@@ -55,70 +61,67 @@
 </div>
 
 <div class="flex-linha mb-2">
-    <a href="{{ url_for('cadastrar_grade_curricular') }}" class="btn btn-primario">+ Cadastrar por Turma</a>
+    <a href="{{ url_for('cadastrar_grade_curricular') }}" class="btn btn-primario">+ Cadastrar Grade</a>
     <a href="{{ url_for('selecionar_turno_grades') }}" class="btn btn-secundario">Outro Turno</a>
 </div>
 
 {% if ordem_series %}
     {% for serie in ordem_series %}
-    <div style="font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;opacity:.45;margin:28px 0 4px;font-weight:700;">
-        {{ serie }}ª Série
+    {% set disciplinas = grades_por_serie[serie]['disciplinas'] %}
+    {% set total = disciplinas|sum(attribute='aulas_semanais') %}
+    {% set cls = 'ok' if total == 30 else ('acima' if total > 30 else '') %}
+    {% set pct = [((total / 30) * 100)|int, 100]|min %}
+
+    <div class="gc-serie-header">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span class="gc-serie-label">{{ serie }}</span>
+            <span class="gc-total-badge {{ cls }}">{{ total }}/30 aulas</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <div class="gc-barra">
+                <div class="gc-barra-fill {{ cls }}" style="width:{{ pct }}%;"></div>
+            </div>
+            <span style="font-size:.72rem;opacity:.5;min-width:32px;text-align:right;">{{ pct }}%</span>
+        </div>
     </div>
 
-    {% for id_turma, turma in grades_por_serie[serie].items() %}
-        {% set total = turma['disciplinas']|sum(attribute='aulas_semanais') %}
-        {% set cls = 'ok' if total == 30 else ('acima' if total > 30 else '') %}
-        {% set pct = [((total / 30) * 100)|int, 100]|min %}
-
-        <div class="gc-turma-header">
-            <div class="gc-turma-titulo">
-                Turma {{ turma['nome_turma'] }}
-                <span class="gc-total-badge {{ cls }}">{{ total }}/30 aulas</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-                <div class="gc-barra">
-                    <div class="gc-barra-fill {{ cls }}" style="width:{{ pct }}%;"></div>
-                </div>
-                <span style="font-size:.72rem;opacity:.5;">{{ pct }}%</span>
-            </div>
-        </div>
-
-        <table style="margin-bottom:4px;">
-            <thead>
-                <tr>
-                    <th>Disciplina</th>
-                    <th style="text-align:center;width:110px;">Aulas/Semana</th>
-                    <th class="td-acoes">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for g in turma['disciplinas'] %}
-                <tr>
-                    <td>
-                        <div style="display:flex;align-items:center;gap:9px;">
-                            <span style="width:4px;height:30px;border-radius:2px;background:{{ g['cor'] }};flex-shrink:0;"></span>
-                            <div>
-                                <strong>{{ g['nome_disciplina'] }}</strong>
-                                <span class="td-sub">{{ g['sigla'] }}</span>
-                            </div>
+    <table style="margin-bottom:20px;">
+        <thead>
+            <tr>
+                <th>Disciplina</th>
+                <th style="text-align:center;width:120px;">Aulas/Semana</th>
+                <th class="td-acoes">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for g in disciplinas %}
+            <tr>
+                <td>
+                    <div style="display:flex;align-items:center;gap:9px;">
+                        <span style="width:4px;height:32px;border-radius:2px;background:{{ g['cor'] }};flex-shrink:0;"></span>
+                        <div>
+                            <strong>{{ g['nome_disciplina'] }}</strong>
+                            <span class="td-sub">{{ g['sigla'] }}</span>
                         </div>
-                    </td>
-                    <td style="text-align:center;font-weight:700;color:var(--cor-primaria);">{{ g['aulas_semanais'] }}</td>
-                    <td class="td-acoes">
-                        <div class="flex-linha">
-                            <a href="{{ url_for('editar_grade_curricular', id_grade=g['id_grade']) }}#form-edicao"
-                               class="btn btn-secundario">Editar</a>
-                            <form action="{{ url_for('deletar_grade_curricular', id_grade=g['id_grade']) }}" method="POST">
-                                <button type="submit" class="btn-perigo"
-                                        onclick="return confirm('Remover {{ g['nome_disciplina'] }} da grade?')">Excluir</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endfor %}
+                    </div>
+                </td>
+                <td style="text-align:center;font-weight:800;font-size:1rem;color:var(--cor-primaria);">
+                    {{ g['aulas_semanais'] }}
+                </td>
+                <td class="td-acoes">
+                    <div class="flex-linha">
+                        <a href="{{ url_for('editar_grade_curricular', id_grade=g['id_grade']) }}#form-edicao"
+                           class="btn btn-secundario">Editar</a>
+                        <form action="{{ url_for('deletar_grade_curricular', id_grade=g['id_grade']) }}" method="POST">
+                            <button type="submit" class="btn-perigo"
+                                    onclick="return confirm('Remover {{ g['nome_disciplina'] }} da grade?')">Excluir</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% endfor %}
 {% else %}
 <div class="estado-vazio" style="margin-top:32px;">
@@ -132,16 +135,29 @@
 <div class="card mt-2" id="form-edicao">
     <h2>Editar Grade Curricular</h2>
     <form method="POST" action="{{ url_for('atualizar_grade_curricular', id_grade=grade_edicao['id_grade']) }}">
-        <div class="form-grupo">
-            <label>Turma:</label>
-            <select name="id_turma" required>
-                {% for t in turmas %}
-                <option value="{{ t['id_turma'] }}"
-                    {% if t['id_turma'] == grade_edicao['id_turma'] %}selected{% endif %}>
-                    {{ t['nome'] }} - {{ t['serie'] }} - {{ t['nome_turno'] }}
-                </option>
-                {% endfor %}
-            </select>
+        <div class="flex-linha" style="gap:12px;flex-wrap:wrap;">
+            <div class="form-grupo" style="flex:1;min-width:160px;">
+                <label>Turno:</label>
+                <select name="id_turno" required>
+                    {% for t in turnos %}
+                    <option value="{{ t['id_turno'] }}"
+                        {% if t['id_turno'] == grade_edicao['id_turno'] %}selected{% endif %}>
+                        {{ t['nome'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-grupo" style="flex:1;min-width:140px;">
+                <label>Série:</label>
+                <select name="serie" required>
+                    {% for s in series_disponiveis %}
+                    <option value="{{ s }}"
+                        {% if s == grade_edicao['serie'] %}selected{% endif %}>
+                        {{ s }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
         <div class="form-grupo">
             <label>Disciplina:</label>
@@ -158,7 +174,7 @@
             <label>Aulas Semanais:</label>
             <input type="number" name="aulas_semanais" min="1" value="{{ grade_edicao['aulas_semanais'] }}" required>
         </div>
-        <button type="submit">Atualizar</button>
+        <button type="submit" class="btn btn-primario">Atualizar</button>
     </form>
 </div>
 {% endif %}

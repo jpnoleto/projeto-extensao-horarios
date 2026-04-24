@@ -94,12 +94,13 @@ comandos_sql = [
     """
     CREATE TABLE IF NOT EXISTS grade_curricular (
         id_grade INT AUTO_INCREMENT PRIMARY KEY,
-        id_turma INT NOT NULL,
+        id_turno INT NOT NULL,
+        serie VARCHAR(50) NOT NULL,
         id_disciplina INT NOT NULL,
         aulas_semanais INT NOT NULL,
-        FOREIGN KEY (id_turma) REFERENCES turma(id_turma),
+        FOREIGN KEY (id_turno) REFERENCES turno(id_turno),
         FOREIGN KEY (id_disciplina) REFERENCES disciplina(id_disciplina),
-        UNIQUE (id_turma, id_disciplina)
+        UNIQUE (id_turno, serie, id_disciplina)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
     """

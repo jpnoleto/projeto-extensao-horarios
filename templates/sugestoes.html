@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block titulo %}Sugestões Automáticas{% endblock %}
+{% block titulo %}Sugestões de Alocação{% endblock %}
 
 {% block estilos_extra %}
 <style>
@@ -20,12 +20,13 @@
 .sug-meta { font-size: .78rem; opacity: .7; margin-top: 3px; }
 
 .cobertura-bar {
-    height: 6px;
-    border-radius: 3px;
+    height: 10px;
+    border-radius: 5px;
     background: #e2e8f0;
     margin-top: 8px;
-    width: 220px;
-    max-width: 100%;
+    flex: 1;
+    max-width: 260px;
+    min-width: 80px;
 }
 .cobertura-fill {
     height: 100%;
@@ -62,12 +63,12 @@
 {% block conteudo %}
 <div class="cabecalho-pagina">
     <a href="{{ url_for('index') }}" class="btn btn-secundario">←</a>
-    <h1>Sugestões Automáticas de Grade</h1>
+    <h1>Sugestões de Alocação</h1>
 </div>
 
 <p style="opacity:.65;font-size:.87rem;margin-bottom:20px;">
-    O sistema gera até 3 propostas de grade baseadas na disponibilidade dos professores,
-    sem apagar alocações já existentes. Você pode visualizar, editar turma a turma e aplicar a que preferir.
+    O sistema gera até 3 propostas de alocação para um turno completo, baseadas na grade curricular e na
+    disponibilidade dos professores. Você pode visualizar, editar turma a turma e aplicar a que preferir.
 </p>
 
 <!-- ── FORMULÁRIO DE GERAÇÃO ── -->
@@ -104,31 +105,40 @@
 <!-- ── LISTA DE SUGESTÕES ── -->
 {% if sugestoes %}
 <h2 style="font-size:.9rem;font-weight:700;color:var(--cor-primaria);margin-bottom:12px;">
-    Sugestões Salvas ({{ sugestoes|length }})
+    Sugestões de Alocação Salvas ({{ sugestoes|length }})
 </h2>
 
 {% for s in sugestoes %}
 {% set cls = 'bc-alto' if s['cobertura_pct'] >= 80 else ('bc-medio' if s['cobertura_pct'] >= 50 else 'bc-baixo') %}
+{% set cor_barra = '#16a34a' if s['cobertura_pct'] >= 80 else ('#d97706' if s['cobertura_pct'] >= 50 else '#dc2626') %}
 <div class="sug-card">
-    <div>
+    <div style="min-width:0;">
+        <div style="margin-bottom:5px;">
+            <span style="background:#eff6ff;color:var(--cor-primaria);border:1px solid #bfdbfe;
+                         padding:2px 9px;border-radius:10px;font-size:.72rem;font-weight:700;">
+                {{ s['nome_turno'] }}
+            </span>
+        </div>
         <div class="sug-nome">{{ s['nome'] }}</div>
         <div class="sug-meta">
-            Turno: {{ s['nome_turno'] }} &nbsp;·&nbsp;
             Criada em {{ s['criado_em'].strftime('%d/%m/%Y %H:%M') if s['criado_em'] else '—' }}
             &nbsp;·&nbsp;
             <span class="badge-cobertura {{ cls }}">{{ s['cobertura_pct'] }}% cobertura</span>
             {% if s['nao_alocados'] > 0 %}
-            &nbsp;·&nbsp; <span style="color:var(--cor-erro);font-size:.75rem;">{{ s['nao_alocados'] }} disciplina(s) sem slot</span>
+            &nbsp;·&nbsp;<span style="color:var(--cor-erro);font-size:.75rem;">{{ s['nao_alocados'] }} sem slot</span>
             {% endif %}
         </div>
-        <div class="cobertura-bar">
-            <div class="cobertura-fill" style="width:{{ s['cobertura_pct'] }}%;"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+            <div class="cobertura-bar">
+                <div class="cobertura-fill" style="width:{{ s['cobertura_pct'] }}%;background:{{ cor_barra }};"></div>
+            </div>
+            <span style="font-size:1rem;font-weight:800;color:{{ cor_barra }};">{{ s['cobertura_pct'] }}%</span>
         </div>
     </div>
     <div class="sug-acoes">
         <a href="{{ url_for('ver_sugestao', id_sugestao=s['id_sugestao']) }}" class="btn btn-primario">Ver / Editar</a>
         <form method="POST" action="{{ url_for('excluir_sugestao', id_sugestao=s['id_sugestao']) }}"
-              onsubmit="return confirm('Excluir esta sugestão?')">
+              onsubmit="return confirm('Excluir esta sugestão de alocação?')">
             <button type="submit" class="btn-perigo">Excluir</button>
         </form>
     </div>

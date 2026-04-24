@@ -132,7 +132,9 @@
     padding: 8px 6px;
     text-align: center;
     font-weight: 700;
-    font-size: .78rem;
+    font-size: .75rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
     border: 1px solid var(--cor-borda);
 }
 
@@ -160,16 +162,18 @@
 
 .modo-ativo .cell-disponivel {
     cursor: pointer;
-    background: rgba(16,185,129,.07);
+    background: #f0fdf4 !important;
+    border-color: #86efac !important;
 }
 
 .modo-ativo .cell-disponivel:hover {
-    background: rgba(16,185,129,.18) !important;
+    background: #dcfce7 !important;
 }
 
 .cell-bloqueada {
-    background: rgba(100,100,100,.06);
+    background: var(--cor-superficie-alt);
     cursor: not-allowed;
+    opacity: .55;
 }
 
 /* Célula com alocação existente (salva no banco) */
@@ -182,7 +186,7 @@
 /* Célula com alocação pendente (ainda não salva) */
 .cell-pendente {
     cursor: pointer;
-    outline: 2px dashed rgba(15,76,129,.6);
+    outline: 2px dashed var(--cor-primaria);
     outline-offset: -2px;
 }
 
@@ -641,17 +645,19 @@ function renderCelula(td, dia, hid) {
     const pid  = String(discAtiva.id_professor);
     const hNum = parseInt(hid);
 
-    const temDisponib = (disponib[pid]?.[dia] || []).includes(hNum);
+    // Sem registros = sem restrição (mesmo comportamento das sugestões)
+    const semRestricao = !(pid in disponib);
+    const temDisponib = semRestricao || (disponib[pid]?.[dia] || []).includes(hNum);
     const profOcupado = (ocupacao[pid]?.[dia]  || []).includes(hNum);
 
     if (!temDisponib) {
         td.classList.add('cell-vazia', 'cell-bloqueada');
     } else if (profOcupado) {
         td.classList.add('cell-vazia', 'cell-bloqueada');
-        td.style.background = 'rgba(220,38,38,.08)';
+        td.style.background = '#fef2f2';
     } else {
         td.classList.add('cell-disponivel');
-        td.style.background = 'rgba(16,185,129,.06)';
+        td.style.background = '';
     }
 }
 

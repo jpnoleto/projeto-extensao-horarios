@@ -3,7 +3,7 @@
 
 {% block estilos_extra %}
 <style>
-    .tabela-grade { max-width: 750px; }
+    .tabela-grade { max-width: 800px; }
     .tabela-grade input[type="number"] { width: 90px; margin-bottom: 0; }
     .ja-cadastrado {
         display: inline-block;
@@ -16,47 +16,89 @@
     .input-ja-cadastrado {
         border-color: var(--cor-secundaria) !important;
     }
+    .disc-cor-chip {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        vertical-align: middle;
+        margin-right: 6px;
+        flex-shrink: 0;
+    }
+    .selects-turno-serie {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .selects-turno-serie .form-grupo {
+        flex: 1;
+        min-width: 160px;
+    }
+    #aviso-sem-series {
+        display: none;
+        font-size: .82rem;
+        color: var(--cor-acento);
+        margin-top: 6px;
+    }
 </style>
 {% endblock %}
 
 {% block conteudo %}
 <div class="cabecalho-pagina">
-    <a href="{{ url_for('index') }}" class="btn btn-secundario">← Voltar</a>
-    <h1>Cadastrar Grade Curricular por Turma</h1>
+    <a href="{{ url_for('selecionar_turno_grades') }}" class="btn btn-secundario">←</a>
+    <h1>Cadastrar Grade Curricular</h1>
 </div>
 
 <div class="card">
+    <p style="font-size:.84rem;opacity:.65;margin-bottom:16px;">
+        A grade é compartilhada por turno e série — todas as turmas da mesma série e turno usam a mesma grade,
+        eliminando duplicação de dados.
+    </p>
     <form method="POST" action="{{ url_for('cadastrar_grade_curricular') }}">
-        <div class="form-grupo">
-            <label>Turma:</label>
-            <select name="id_turma" id="select-turma" required>
-                <option value="">Selecione</option>
-                {% for turma in turmas %}
-                    <option value="{{ turma['id_turma'] }}">
-                        {{ turma['nome'] }} — {{ turma['serie'] }} — {{ turma['nome_turno'] }}
-                    </option>
-                {% endfor %}
-            </select>
+
+        <div class="selects-turno-serie">
+            <div class="form-grupo">
+                <label>Turno:</label>
+                <select name="id_turno" id="select-turno" required>
+                    <option value="">Selecione o turno</option>
+                    {% for turno in turnos %}
+                    <option value="{{ turno['id_turno'] }}">{{ turno['nome'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-grupo">
+                <label>Série:</label>
+                <select name="serie" id="select-serie" required>
+                    <option value="">— Selecione primeiro o turno —</option>
+                </select>
+                <small id="aviso-sem-series">Nenhuma turma cadastrada para este turno.</small>
+            </div>
         </div>
 
         <table class="tabela-grade mt-2">
             <thead>
                 <tr>
                     <th>Disciplina</th>
-                    <th>Sigla</th>
-                    <th>Aulas Semanais</th>
+                    <th style="width:50px;text-align:center;">Sigla</th>
+                    <th style="width:130px;">Aulas Semanais</th>
                 </tr>
             </thead>
             <tbody>
                 {% for disciplina in disciplinas %}
                 <tr>
-                    <td>{{ disciplina['nome'] }}</td>
-                    <td>{{ disciplina['sigla'] }}</td>
+                    <td>
+                        <span class="disc-cor-chip" style="background:{{ disciplina['cor'] }};"></span>
+                        {{ disciplina['nome'] }}
+                    </td>
+                    <td style="text-align:center;font-weight:700;color:var(--cor-primaria);">
+                        {{ disciplina['sigla'] }}
+                    </td>
                     <td>
                         <input type="number"
                                id="aulas_{{ disciplina['id_disciplina'] }}"
                                name="aulas_semanais_{{ disciplina['id_disciplina'] }}"
-                               min="0" placeholder="0">
+                               min="0"
+                               placeholder="{{ disciplina['carga_horaria_semanal'] }}">
                         <span class="ja-cadastrado" id="existente_{{ disciplina['id_disciplina'] }}" style="display:none;"></span>
                     </td>
                 </tr>
@@ -65,7 +107,7 @@
         </table>
 
         <div class="mt-2">
-            <button type="submit">Salvar Grade</button>
+            <button type="submit" class="btn btn-primario">Salvar Grade</button>
         </div>
     </form>
 </div>
@@ -73,9 +115,13 @@
 
 {% block scripts_extra %}
 <script>
+    const SERIES_POR_TURNO = {{ series_por_turno | tojson }};
     const GRADES = {{ grades_existentes | tojson }};
+    // GRADES = {str(id_turno): {str(serie): {str(id_disciplina): aulas_semanais}}}
 
-    const select = document.getElementById('select-turma');
+    const selectTurno = document.getElementById('select-turno');
+    const selectSerie = document.getElementById('select-serie');
+    const aviseSeries = document.getElementById('aviso-sem-series');
 
     function limparCampos() {
         document.querySelectorAll('[id^="aulas_"]').forEach(input => {
@@ -88,9 +134,10 @@
         });
     }
 
-    function preencherGrade(idTurma) {
+    function preencherGrade(idTurno, serie) {
         limparCampos();
-        const dados = GRADES[String(idTurma)] || {};
+        if (!idTurno || !serie) return;
+        const dados = ((GRADES[String(idTurno)] || {})[String(serie)]) || {};
         for (const [idDisc, aulas] of Object.entries(dados)) {
             const input = document.getElementById('aulas_' + idDisc);
             const span  = document.getElementById('existente_' + idDisc);
@@ -105,12 +152,24 @@
         }
     }
 
-    select.addEventListener('change', () => {
-        if (select.value) {
-            preencherGrade(select.value);
-        } else {
-            limparCampos();
-        }
+    selectTurno.addEventListener('change', () => {
+        const turnoId = selectTurno.value;
+        const series  = SERIES_POR_TURNO[turnoId] || [];
+
+        selectSerie.innerHTML = '<option value="">— Selecione a série —</option>';
+        series.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            selectSerie.appendChild(opt);
+        });
+
+        aviseSeries.style.display = (turnoId && series.length === 0) ? 'block' : 'none';
+        limparCampos();
+    });
+
+    selectSerie.addEventListener('change', () => {
+        preencherGrade(selectTurno.value, selectSerie.value);
     });
 </script>
 {% endblock %}

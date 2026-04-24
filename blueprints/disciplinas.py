@@ -92,6 +92,10 @@ def registrar(app):
                 SET nome = %s, sigla = %s, cor = %s, carga_horaria_semanal = %s
                 WHERE id_disciplina = %s
             """, (nome, sigla, cor, carga, id_disciplina))
+            cursor.execute(
+                "UPDATE grade_curricular SET aulas_semanais = %s WHERE id_disciplina = %s",
+                (carga, id_disciplina)
+            )
             conexao.commit()
         return redirect(url_for('listar_disciplinas'))
 

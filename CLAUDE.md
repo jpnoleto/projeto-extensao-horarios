@@ -57,7 +57,7 @@ Cada arquivo define uma função `registrar(app)` que registra rotas diretamente
 | `horarios.py` | Horário de Aula |
 | `professor_disciplina.py` | Relação Professor × Disciplina |
 | `disponibilidade.py` | Disponibilidade do Professor + Grade |
-| `grade_curricular.py` | Grade Curricular |
+| `grade_curricular.py` | Grade Curricular (compartilhada por turno + série) |
 | `alocacao.py` | Alocação de Aulas |
 | `relatorio.py` | Relatório de Grade Horária + Horário do Professor (`/meu_horario`) |
 | `sugestao.py` | Sugestões Automáticas de Grade (`/sugestoes`) |
@@ -69,8 +69,8 @@ turno → turma
 disciplina
 professor → professor_disciplina ← disciplina
 professor → disponibilidade_professor ← horario_aula
-turma + disciplina → grade_curricular
-grade_curricular + professor + local + horario_aula → alocacao
+(turno + serie) + disciplina → grade_curricular   ← compartilhada, sem duplicação por turma
+grade_curricular + turma + professor + local + horario_aula → alocacao
 ```
 
 Entidades base (sem dependências): `professor`, `disciplina`, `turno`, `local`, `horario_aula`.
@@ -433,11 +433,13 @@ O relatório (`templates/relatorio.html`) usa layout de impressão com fundo bra
 - Células mostram `sigla` (linha 1) + `professor_curto` (linha 2) com `background-color` da disciplina
 - `print-color-adjust: exact` garante que as cores aparecem ao imprimir/salvar PDF
 
-## Sugestões Automáticas de Grade
+## Sugestões de Alocação
 
+- Renomeado de "Sugestões de Grade" para "Sugestões de Alocação" (a grade já existe; o que se sugere é a distribuição de aulas nos horários)
 - Tabela `sugestao_grade` criada automaticamente pelo `sugestao.py` no startup (CREATE TABLE IF NOT EXISTS)
 - Algoritmo greedy com 3 seeds (42, 137, 999) para gerar até 3 variações por geração
-- Respeita alocações existentes: inclui ocupação prof/turma no estado inicial do algoritmo
+- Geração por turno completo: todas as turmas de todos as séries do turno
+- Não bloqueia por alocações existentes — conflitos resolvidos via SAVEPOINT ao aplicar
 - Distribui aulas priorizando dias diferentes (1ª passagem: 1 por dia; 2ª: preenche restante)
 - Rotas: `GET /sugestoes`, `POST /gerar_sugestoes`, `GET /sugestao/<id>`, `POST /sugestao/<id>/excluir`, `POST /sugestao/<id>/aplicar`
 - Aplicar tudo ou por turma individual; editar via `alocar_turma_completa?sugestao_id=X`

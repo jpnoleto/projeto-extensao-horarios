@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block titulo %}{{ sugestao['nome'] }}{% endblock %}
+{% block titulo %}Sugestão de Alocação{% endblock %}
 
 {% block estilos_extra %}
 <style>
@@ -193,11 +193,20 @@
 
 {% if nao_alocados %}
 <div class="aviso-nao-aloc mb-2">
-    <strong style="color:var(--cor-erro);">⚠ Disciplinas sem slot ({{ nao_alocados|length }}):</strong>
-    <ul style="margin:6px 0 0 16px;padding:0;color:var(--cor-erro);">
+    <strong style="color:var(--cor-erro);">⚠ Disciplinas sem alocação possível ({{ nao_alocados|length }}):</strong>
+    <ul style="margin:8px 0 0 16px;padding:0;">
         {% for na in nao_alocados %}
         {% set t = turmas_lista|selectattr('id_turma', 'equalto', na['id_turma'])|first %}
-        <li style="opacity:.85;">{{ na['nome'] }} — Turma {{ t.nome if t else na['id_turma'] }} (faltam {{ na['faltam'] }} aula(s)) — {{ na['motivo'] }}</li>
+        <li style="margin-bottom:4px;">
+            <span style="background:var(--cor-erro);color:#fff;border-radius:3px;
+                         padding:1px 5px;font-size:.7rem;margin-right:6px;font-weight:700;">
+                {{ '👤' if na['motivo'] == 'sem professor vinculado' else '🕐' }}
+            </span>
+            <strong>{{ na['nome'] }}</strong>
+            — Turma {{ t['nome'] if t else na['id_turma'] }}
+            — faltam <strong>{{ na['faltam'] }}</strong> aula(s)
+            — <em style="opacity:.65;font-size:.9em;">{{ na['motivo'] }}</em>
+        </li>
         {% endfor %}
     </ul>
 </div>
@@ -281,5 +290,5 @@
 </div>
 {% endif %}
 
-<a href="{{ url_for('listar_sugestoes') }}" class="link-voltar mt-2">← Voltar para Sugestões</a>
+<a href="{{ url_for('listar_sugestoes') }}" class="link-voltar mt-2">← Voltar para Sugestões de Alocação</a>
 {% endblock %}

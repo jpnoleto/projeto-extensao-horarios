@@ -180,16 +180,16 @@ def registrar(app):
 
             # Grade curricular — todas as linhas (1 por professor habilitado)
             cursor.execute("""
-                SELECT gc.id_turma, gc.id_disciplina, gc.aulas_semanais,
+                SELECT t.id_turma, gc.id_disciplina, gc.aulas_semanais,
                        d.nome AS nome_disciplina, d.sigla, d.cor,
                        p.id_professor, p.nome AS nome_professor
                 FROM grade_curricular gc
-                JOIN turma t ON gc.id_turma = t.id_turma
+                JOIN turma t ON gc.id_turno = t.id_turno AND gc.serie = t.serie
                 JOIN disciplina d ON gc.id_disciplina = d.id_disciplina
                 LEFT JOIN professor_disciplina pd ON pd.id_disciplina = gc.id_disciplina
                 LEFT JOIN professor p ON p.id_professor = pd.id_professor AND p.status = 'ativo'
-                WHERE t.id_turno = %s
-                ORDER BY gc.id_turma, gc.id_disciplina, p.id_professor
+                WHERE gc.id_turno = %s
+                ORDER BY t.id_turma, gc.id_disciplina, p.id_professor
             """, (id_turno,))
             grade_rows = cursor.fetchall()
 
