@@ -22,12 +22,9 @@ def registrar(app):
         hora_inicio = request.form.get('hora_inicio', '').strip()
         hora_fim = request.form.get('hora_fim', '').strip()
 
-        if not eh_intervalo and (not hora_inicio or not hora_fim):
+        if not hora_inicio or not hora_fim:
             flash("Hora de início e hora de fim são obrigatórias.", 'erro')
             return redirect(url_for('cadastrar_horario'))
-
-        hora_inicio = hora_inicio or 'Intervalo'
-        hora_fim = hora_fim or 'Intervalo'
 
         try:
             with conectar() as conexao:
@@ -69,12 +66,9 @@ def registrar(app):
         hora_inicio = request.form.get('hora_inicio', '').strip()
         hora_fim = request.form.get('hora_fim', '').strip()
 
-        if not eh_intervalo and (not hora_inicio or not hora_fim):
+        if not hora_inicio or not hora_fim:
             flash("Hora de início e hora de fim são obrigatórias.", 'erro')
             return redirect(url_for('editar_horario', id_horario=id_horario))
-
-        hora_inicio = hora_inicio or 'Intervalo'
-        hora_fim = hora_fim or 'Intervalo'
 
         with conectar() as conexao:
             cursor = conexao.cursor()

@@ -135,6 +135,18 @@ comandos_sql = [
         FOREIGN KEY (id_professor) REFERENCES professor(id_professor)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     """,
+    """
+    CREATE TABLE IF NOT EXISTS sugestao_grade (
+        id_sugestao INT AUTO_INCREMENT PRIMARY KEY,
+        id_turno INT NOT NULL,
+        nome VARCHAR(100) NOT NULL,
+        dados_json LONGTEXT NOT NULL,
+        cobertura_pct INT DEFAULT 0,
+        nao_alocados INT DEFAULT 0,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (id_turno) REFERENCES turno(id_turno)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    """,
 ]
 
 for comando in comandos_sql:

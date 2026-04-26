@@ -230,7 +230,8 @@
     </thead>
     <tbody>
         {% for dia in dias %}
-            {% set dia_label = {'segunda':'Segunda','terca':'Terça','quarta':'Quarta','quinta':'Quinta','sexta':'Sexta'}[dia] %}
+            {% set _nomes_dia = {'segunda':'Segunda','terca':'Terça','quarta':'Quarta','quinta':'Quinta','sexta':'Sexta'} %}
+            {% set dia_label = _nomes_dia.get(dia, dia|capitalize) %}
             {% set horarios_aula = horarios_lista|selectattr('eh_intervalo', 'equalto', 0)|list %}
             {% set n_aulas = horarios_aula|length %}
 

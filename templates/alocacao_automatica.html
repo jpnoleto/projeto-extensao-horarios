@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block titulo %}Alocação Automática{% endblock %}
+
+{% block conteudo %}
+<div class="cabecalho-pagina">
+    <a href="{{ url_for('index') }}" class="btn btn-secundario">← Voltar</a>
+    <h1>Alocação Automática por Turno</h1>
+</div>
+
+<p style="opacity:.6;font-size:.87rem;margin-bottom:22px;">
+    O sistema lê a grade curricular do turno selecionado e distribui automaticamente todas as aulas
+    nos horários disponíveis, respeitando 30 aulas semanais por turma.
+    Conflitos com alocações já existentes são ignorados.
+</p>
+
+{% if turnos %}
+<form method="POST" action="{{ url_for('executar_alocacao_automatica') }}">
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:480px;margin-bottom:24px;">
+        {% for turno in turnos %}
+        <label style="display:flex;align-items:center;gap:14px;padding:14px 18px;
+                       background:var(--cor-superficie);border:2px solid var(--cor-borda);
+                       border-radius:var(--raio-borda);cursor:pointer;
+                       transition:border-color .2s;"
+               onmouseover="this.style.borderColor='var(--cor-primaria)'"
+               onmouseout="this.style.borderColor=this.querySelector('input').checked?'var(--cor-primaria)':'var(--cor-borda)'">
+            <input type="radio" name="id_turno" value="{{ turno['id_turno'] }}"
+                   style="accent-color:var(--cor-primaria);width:18px;height:18px;"
+                   onchange="document.querySelectorAll('label[data-turno]').forEach(l=>{
+                       l.style.borderColor=l.querySelector('input').checked?'var(--cor-primaria)':'var(--cor-borda)';
+                   })" required>
+            <span style="font-size:1.4rem;">
+                {% if 'matu' in turno['nome']|lower %}☀️
+                {% elif 'vesp' in turno['nome']|lower %}🌅
+                {% elif 'notu' in turno['nome']|lower or 'noit' in turno['nome']|lower %}🌙
+                {% else %}🏫{% endif %}
+            </span>
+            <span style="font-weight:700;font-size:.95rem;">{{ turno['nome'] }}</span>
+        </label>
+        {% endfor %}
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;">
+        <button type="submit" class="btn btn-primario"
+                onclick="return confirm('Isso irá criar alocações para todas as turmas do turno selecionado. Continuar?')">
+            ⚡ Executar Alocação Automática
+        </button>
+        <a href="{{ url_for('index') }}" class="btn btn-secundario">Cancelar</a>
+    </div>
+</form>
+{% else %}
+<div class="estado-vazio">
+    <span class="estado-vazio-icone">🏫</span>
+    Nenhum turno cadastrado.
+</div>
+{% endif %}
+{% endblock %}

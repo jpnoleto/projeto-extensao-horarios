@@ -14,6 +14,13 @@ def registrar(app):
             professores = cursor.fetchall()
             cursor.execute("SELECT * FROM horario_aula ORDER BY hora_inicio")
             horarios = cursor.fetchall()
+            cursor.execute("""
+                SELECT nome FROM professor
+                WHERE status = 'ativo'
+                  AND id_professor NOT IN (SELECT DISTINCT id_professor FROM disponibilidade_professor)
+                ORDER BY nome
+            """)
+            sem_disponibilidade = [r['nome'] for r in cursor.fetchall()]
 
             if request.method == 'POST':
                 id_professor = request.form.get('id_professor', '').strip()
@@ -50,7 +57,8 @@ def registrar(app):
                         flash("Todas as combinações selecionadas já estavam cadastradas.", 'erro')
 
         return render_template('cadastro_disponibilidade.html',
-                               professores=professores, horarios=horarios)
+                               professores=professores, horarios=horarios,
+                               sem_disponibilidade=sem_disponibilidade)
 
     @app.route('/disponibilidade_professor')
     @requer_perfil('diretor', 'secretaria')

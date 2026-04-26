@@ -436,14 +436,23 @@ O relatório (`templates/relatorio.html`) usa layout de impressão com fundo bra
 ## Sugestões de Alocação
 
 - Renomeado de "Sugestões de Grade" para "Sugestões de Alocação" (a grade já existe; o que se sugere é a distribuição de aulas nos horários)
-- Tabela `sugestao_grade` criada automaticamente pelo `sugestao.py` no startup (CREATE TABLE IF NOT EXISTS)
-- Algoritmo greedy com 3 seeds (42, 137, 999) para gerar até 3 variações por geração
-- Geração por turno completo: todas as turmas de todos as séries do turno
-- Não bloqueia por alocações existentes — conflitos resolvidos via SAVEPOINT ao aplicar
-- Distribui aulas priorizando dias diferentes (1ª passagem: 1 por dia; 2ª: preenche restante)
+- Tabela `sugestao_grade` criada em `criar_banco.py` (não mais em `sugestao.py`)
+- Algoritmo: pré-atribui professor fixo por demand (load balancing) + MCV (Most Constrained Variable)
+- MCV: a cada iteração agenda a demanda com menos slots disponíveis primeiro — evita deadlocks greedy com zero folga (30 aulas = 30 slots)
+- Passa `{}` como disponibilidades → horário ideal irrestrito; conflitos reais só são detectados ao aplicar
+- Geração por turno completo: todas as turmas de todas as séries do turno
 - Rotas: `GET /sugestoes`, `POST /gerar_sugestoes`, `GET /sugestao/<id>`, `POST /sugestao/<id>/excluir`, `POST /sugestao/<id>/aplicar`
 - Aplicar tudo ou por turma individual; editar via `alocar_turma_completa?sugestao_id=X`
 - `alocar_turma.html` inicializa `pendentes` com `sugestaoPendentes` quando `sugestao_id` é passado
+
+## Alocação Automática
+
+- Rotas em `blueprints/sugestao.py`: `GET /alocacao_automatica` e `POST /executar_alocacao_automatica`
+- Lê a grade curricular do turno selecionado e chama `_gerar_sugestao(..., seed=42)` com disponibilidades vazias
+- Insere slots diretamente na tabela `alocacao` via SAVEPOINT (conflitos com alocações existentes são ignorados)
+- Template: `templates/alocacao_automatica.html` — seleção de turno com radio buttons + confirmação
+- Link no dashboard (index.html) no módulo Planejamento, acima de "Alocar por Turma"
+- Redireciona para `listar_alocacoes_turno` após execução com flash de resultado (inseridos / conflitos / sem slots)
 
 ## Exportação de Relatório em PDF
 

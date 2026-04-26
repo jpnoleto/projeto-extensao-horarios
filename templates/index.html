@@ -186,8 +186,8 @@
 
             <div class="acoes-divisor"></div>
 
-            <a href="{{ url_for('selecionar_turma_alocacao') }}" class="acao-destaque">
-                <span class="acao-rapida-icone">⚡</span>
+            <a href="{{ url_for('selecionar_turma_alocacao') }}" class="acao-rapida">
+                <span class="acao-rapida-icone" style="background:rgba(245,158,11,0.13);">✏️</span>
                 <span class="acao-rapida-label">Alocar por Turma</span>
             </a>
             <a href="{{ url_for('selecionar_turno_alocacoes') }}" class="acao-rapida">
@@ -204,9 +204,13 @@
 
             <div class="acoes-divisor"></div>
 
+            <a href="{{ url_for('alocacao_automatica') }}" class="acao-destaque">
+                <span class="acao-rapida-icone">⚡</span>
+                <span class="acao-rapida-label">Alocação Automática por Turno</span>
+            </a>
             <a href="{{ url_for('listar_sugestoes') }}" class="acao-rapida acao-verde">
                 <span class="acao-rapida-icone">✦</span>
-                <span class="acao-rapida-label">Sugestões Automáticas de Grade</span>
+                <span class="acao-rapida-label">Sugestões Automáticas de Alocações</span>
                 {% if total_sugestoes > 0 %}
                     <span class="acao-rapida-badge">{{ total_sugestoes }}</span>
                 {% endif %}

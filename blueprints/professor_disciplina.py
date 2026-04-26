@@ -23,6 +23,13 @@ def registrar(app):
                 ORDER BY p.nome, d.nome
             """)
             relacoes = cursor.fetchall()
+            cursor.execute("""
+                SELECT nome FROM professor
+                WHERE status = 'ativo'
+                  AND id_professor NOT IN (SELECT DISTINCT id_professor FROM professor_disciplina)
+                ORDER BY nome
+            """)
+            sem_vinculo = [r['nome'] for r in cursor.fetchall()]
 
             if request.method == 'POST':
                 id_professor = request.form.get('id_professor', '').strip()
@@ -44,7 +51,8 @@ def registrar(app):
                     conexao.rollback()
 
         return render_template('cadastro_professor_disciplina.html',
-                               professores=professores, disciplinas=disciplinas, relacoes=relacoes)
+                               professores=professores, disciplinas=disciplinas,
+                               relacoes=relacoes, sem_vinculo=sem_vinculo)
 
     @app.route('/professores_disciplinas')
     @requer_perfil('diretor', 'secretaria')

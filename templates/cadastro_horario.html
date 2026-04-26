@@ -12,19 +12,17 @@
         <form method="POST" action="{{ url_for('salvar_horario') }}" id="form-horario">
             <div class="form-grupo">
                 <label>
-                    <input type="checkbox" name="eh_intervalo" id="chk-intervalo" onchange="toggleHoras()">
+                    <input type="checkbox" name="eh_intervalo" id="chk-intervalo" onchange="atualizarLabels()">
                     Este horário é um intervalo
                 </label>
             </div>
-            <div id="campos-hora">
-                <div class="form-grupo">
-                    <label>Hora de Início <span style="color:var(--cor-erro)">*</span></label>
-                    <input type="time" name="hora_inicio" id="hora_inicio">
-                </div>
-                <div class="form-grupo">
-                    <label>Hora de Fim <span style="color:var(--cor-erro)">*</span></label>
-                    <input type="time" name="hora_fim" id="hora_fim">
-                </div>
+            <div class="form-grupo">
+                <label for="hora_inicio" id="label-hora-inicio">Início do Intervalo</label>
+                <input type="time" name="hora_inicio" id="hora_inicio" required>
+            </div>
+            <div class="form-grupo">
+                <label for="hora_fim" id="label-hora-fim">Fim do Intervalo</label>
+                <input type="time" name="hora_fim" id="hora_fim" required>
             </div>
             <button type="submit">Salvar</button>
         </form>
@@ -40,8 +38,8 @@
             <tbody>
                 {% for h in horarios %}
                 <tr>
-                    <td>{% if h['eh_intervalo'] %}—{% else %}{{ h['hora_inicio'] }}{% endif %}</td>
-                    <td>{% if h['eh_intervalo'] %}—{% else %}{{ h['hora_fim'] }}{% endif %}</td>
+                    <td>{{ h['hora_inicio'] }}</td>
+                    <td>{{ h['hora_fim'] }}</td>
                     <td>{% if h['eh_intervalo'] %}<span class="badge badge-inativo">Intervalo</span>{% else %}Aula{% endif %}</td>
                 </tr>
                 {% endfor %}
@@ -52,17 +50,16 @@
         {% endif %}
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts_extra %}
 <script>
-function toggleHoras() {
+function atualizarLabels() {
     const isIntervalo = document.getElementById('chk-intervalo').checked;
-    const campos = document.getElementById('campos-hora');
-    campos.style.display = isIntervalo ? 'none' : '';
-    document.getElementById('hora_inicio').required = !isIntervalo;
-    document.getElementById('hora_fim').required = !isIntervalo;
+    document.getElementById('label-hora-inicio').textContent = isIntervalo ? 'Início do Intervalo' : 'Hora de Início';
+    document.getElementById('label-hora-fim').textContent    = isIntervalo ? 'Fim do Intervalo'    : 'Hora de Fim';
 }
+// Inicializa com labels de aula
+atualizarLabels();
 </script>
 {% endblock %}

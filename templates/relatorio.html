@@ -277,7 +277,8 @@
 <div class="relatorio-wrapper">
 
     <div class="rel-header">
-        <img src="/static/img/logo.png" alt="Logo" class="rel-logo">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="rel-logo"
+             onerror="this.style.display='none'">
         <div class="rel-header-info">
             {% if nome_escola %}
                 <div class="rel-escola">{{ nome_escola }}</div>
