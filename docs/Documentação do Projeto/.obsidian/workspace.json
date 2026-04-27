@@ -90,6 +90,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "Restrições e Especificações.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -99,7 +100,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Links inversos"
+              "title": "Links inversos para Restrições e Especificações"
             }
           },
           {
@@ -108,11 +109,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "Restrições e Especificações.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Links de saída"
+              "title": "Links de saída para Restrições e Especificações"
             }
           },
           {
@@ -150,12 +152,13 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "Restrições e Especificações.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Sumário"
+              "title": "Sumário de Restrições e Especificações"
             }
           }
         ]
@@ -179,6 +182,7 @@
   },
   "active": "f32f9749bb4d61ce",
   "lastOpenFiles": [
+    "Deploy.md",
     "Restrições e Especificações.md",
     "Bem-vindo.md",
     "Visual e Tema.md",
@@ -203,7 +207,6 @@
     "copilot/copilot-custom-prompts",
     "copilot",
     "Bem-vindo.md.tmp.22816.1777159558900",
-    "Deploy.md",
     "Deploy.md.tmp.22816.1777159551230",
     "Autenticação.md.tmp.22816.1777159541585",
     "Módulos (Blueprints).md",
