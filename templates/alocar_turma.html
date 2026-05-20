@@ -175,6 +175,30 @@
     opacity: .55;
 }
 
+/* Célula forçável: sem disponib. ou professor ocupado, mas clicável no modo forçar */
+.modo-ativo.modo-forcar .cell-forcavel {
+    cursor: pointer;
+    background: #fef9c3 !important;
+    border-color: #fde047 !important;
+    opacity: 1;
+}
+
+.modo-ativo.modo-forcar .cell-forcavel:hover {
+    background: #fef08a !important;
+}
+
+#banner-forcar {
+    display: none;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: .78rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
 /* Célula com alocação existente (salva no banco) */
 .cell-salva {
     cursor: pointer;
@@ -310,6 +334,36 @@ td:hover .btn-remover-slot { opacity: 1; }
     border-radius: 4px;
     font-weight: 600;
 }
+
+/* Popup de edição de alocação salva */
+.popup-salva-label {
+    font-size: .7rem;
+    opacity: .6;
+    margin-bottom: 6px;
+}
+
+.popup-salva-sel {
+    font-size: .75rem;
+    padding: 4px 6px;
+    width: 150px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 4px;
+}
+
+.popup-salva-acoes {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.popup-salva-cancelar {
+    font-size: .72rem;
+    padding: 4px 8px;
+    background: none;
+    border: 1px solid var(--cor-borda);
+    border-radius: 4px;
+    cursor: pointer;
+}
 </style>
 {% endblock %}
 
@@ -343,8 +397,6 @@ td:hover .btn-remover-slot { opacity: 1; }
             <div class="disc-item {% if d['ja_alocadas'] >= d['aulas_semanais'] %}completa{% endif %}"
                  id="disc-{{ d['id_disciplina'] }}"
                  data-id="{{ d['id_disciplina'] }}"
-                 data-prof="{{ d['id_professor'] }}"
-                 data-prof-nome="{{ (d['nome_professor'] or '').split()[0] }}"
                  data-sigla="{{ d['sigla'] }}"
                  data-cor="{{ d['cor'] }}"
                  data-semanais="{{ d['aulas_semanais'] }}"
@@ -352,7 +404,13 @@ td:hover .btn-remover-slot { opacity: 1; }
                 <div class="disc-chip" style="background:{{ d['cor'] }};"></div>
                 <div class="disc-info">
                     <div class="disc-nome" title="{{ d['nome_disciplina'] }}">{{ d['nome_disciplina'] }}</div>
-                    <div class="disc-prof">{{ d['nome_professor'] or '—' }}</div>
+                    <div class="disc-prof">
+                        {%- if d['professores']|length > 1 -%}
+                            {{ d['professores']|length }} professores
+                        {%- else -%}
+                            {{ d['nome_professor'] or '—' }}
+                        {%- endif -%}
+                    </div>
                     <div class="prog-bar">
                         <div class="prog-bar-fill" id="prog-bar-{{ d['id_disciplina'] }}"
                              style="background:{{ d['cor'] }};width:{{ [((d['ja_alocadas'] / d['aulas_semanais']) * 100)|int, 100]|min }}%;"></div>
@@ -368,15 +426,24 @@ td:hover .btn-remover-slot { opacity: 1; }
 
         <!-- ── GRADE DE HORÁRIOS ── -->
         <div class="painel-grade">
+            <div id="banner-forcar">
+                ⚠️ Modo forçar ativo — células amarelas permitem alocar mesmo sem disponibilidade cadastrada. Conflitos reais de professor serão ignorados pelo banco com aviso.
+            </div>
             <div class="grade-header">
                 <div>
                     <div class="grade-titulo" id="hint-disciplina">← Selecione uma disciplina para começar</div>
                 </div>
-                <div class="grade-legenda">
-                    <span class="leg"><span class="leg-box" style="background:rgba(16,185,129,.25);border:1px solid #6ee7b7;"></span> Disponível</span>
-                    <span class="leg"><span class="leg-box" style="background:rgba(220,38,38,.18);border:1px solid #fca5a5;"></span> Prof. ocupado</span>
-                    <span class="leg"><span class="leg-box" style="background:#f1f5f9;border:1px dashed #94a3b8;"></span> Sem disponib.</span>
-                    <span class="leg"><span class="leg-box" style="outline:2px dashed #fff;"></span> Pendente (não salvo)</span>
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                    <div class="grade-legenda">
+                        <span class="leg"><span class="leg-box" style="background:rgba(16,185,129,.25);border:1px solid #6ee7b7;"></span> Disponível</span>
+                        <span class="leg"><span class="leg-box" style="background:rgba(220,38,38,.18);border:1px solid #fca5a5;"></span> Prof. ocupado</span>
+                        <span class="leg"><span class="leg-box" style="background:#f1f5f9;border:1px dashed #94a3b8;"></span> Sem disponib.</span>
+                        <span class="leg"><span class="leg-box" style="background:#fef9c3;border:1px solid #fde047;"></span> Forçável</span>
+                    </div>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;color:#92400e;cursor:pointer;white-space:nowrap;">
+                        <input type="checkbox" id="toggle-forcar" onchange="toggleForcar()" style="width:15px;height:15px;cursor:pointer;">
+                        Forçar alocação
+                    </label>
                 </div>
             </div>
 
@@ -429,11 +496,32 @@ td:hover .btn-remover-slot { opacity: 1; }
         <button type="submit" class="btn btn-primario" id="btn-salvar" disabled>Salvar Alocações</button>
         <span id="status-pendentes">Nenhuma alteração pendente</span>
         <div style="flex:1;"></div>
+        <form method="POST" action="{{ url_for('deletar_todas_alocacoes_turma', id_turma=turma['id_turma']) }}"
+              onsubmit="return confirm('Excluir TODAS as alocações da turma {{ turma["serie"] }}{{ turma["nome"] }}? Esta ação não pode ser desfeita.')">
+            <button type="submit" class="btn-perigo">🗑 Excluir Todas</button>
+        </form>
         <a href="{{ url_for('selecionar_turma_alocacao') }}" class="btn btn-secundario">← Voltar</a>
     </div>
 </form>
 
-<!-- Popup de local (reutilizado) -->
+<!-- Modal de seleção de professor para alocação forçada -->
+<div id="modal-forcar" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
+    <div style="background:var(--cor-superficie);border-radius:10px;padding:22px;min-width:320px;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.25);">
+        <div style="font-weight:700;font-size:.95rem;margin-bottom:6px;">Alocar com confirmação</div>
+        <div id="modal-forcar-hint" style="font-size:.78rem;margin-bottom:14px;"></div>
+        <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:4px;">Professor da disciplina:</label>
+        <select id="modal-forcar-sel" style="width:100%;padding:8px;font-size:.84rem;border:1px solid var(--cor-borda);border-radius:6px;margin-bottom:12px;"></select>
+        <label style="font-size:.8rem;font-weight:600;display:block;margin-bottom:4px;">Local:</label>
+        <select id="modal-forcar-local" style="width:100%;padding:8px;font-size:.84rem;border:1px solid var(--cor-borda);border-radius:6px;margin-bottom:14px;"></select>
+        <div id="modal-forcar-local-hint" style="font-size:.75rem;color:var(--cor-erro);margin-top:-10px;margin-bottom:10px;display:none;">⚠️ Este local já está ocupado neste horário — a alocação pode ser rejeitada.</div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button type="button" onclick="fecharModalForcar()" style="font-size:.82rem;padding:6px 14px;background:none;border:1px solid var(--cor-borda);border-radius:6px;cursor:pointer;">Cancelar</button>
+            <button type="button" onclick="confirmarForcar()" class="btn btn-primario" style="font-size:.82rem;padding:6px 16px;">Alocar assim mesmo</button>
+        </div>
+    </div>
+</div>
+
+<!-- Popup para pendentes: trocar local antes de salvar -->
 <div id="local-popup" class="sel-local-popup">
     <div style="font-size:.7rem;opacity:.6;margin-bottom:4px;">Alterar local:</div>
     <select id="local-popup-sel" onchange="aplicarLocalPopup()">
@@ -441,6 +529,30 @@ td:hover .btn-remover-slot { opacity: 1; }
         <option value="{{ l['id_local'] }}">{{ l['nome'] }}</option>
         {% endfor %}
     </select>
+</div>
+
+<!-- Popup para alocações já salvas: editar local ou excluir -->
+<div id="popup-salva" class="sel-local-popup">
+    <div class="popup-salva-label">Alterar local da aula salva:</div>
+    <form id="form-editar-local" method="POST" onclick="event.stopPropagation()">
+        <input type="hidden" name="id_turma" value="{{ turma['id_turma'] }}">
+        <select name="id_local" id="popup-salva-sel" class="popup-salva-sel">
+            {% for l in locais %}
+            <option value="{{ l['id_local'] }}">{{ l['nome'] }}</option>
+            {% endfor %}
+        </select>
+        <div class="popup-salva-acoes">
+            <button type="submit" class="btn btn-primario" style="font-size:.72rem;padding:4px 10px;">Salvar local</button>
+            <button type="button" class="popup-salva-cancelar" onclick="fecharPopupSalva()">Cancelar</button>
+        </div>
+    </form>
+    <form id="form-deletar-salva" method="POST" onclick="event.stopPropagation()"
+          onsubmit="return confirm('Remover esta alocação?')"
+          style="margin-top:6px;border-top:1px solid var(--cor-borda);padding-top:6px;">
+        <button type="submit" style="width:100%;font-size:.72rem;padding:4px 8px;background:#fef2f2;border:1px solid #fecaca;color:var(--cor-erro);border-radius:4px;cursor:pointer;">
+            🗑 Excluir esta aula
+        </button>
+    </form>
 </div>
 {% endblock %}
 
@@ -454,26 +566,61 @@ const ocupacao     = {{ ocupacao_json|safe }};
 const disponib     = {{ disponibilidades_json|safe }};
 const horariosLst  = {{ horarios_json|safe }};
 const locaisLst    = {{ locais_json|safe }};
+const todosProfs        = {{ todos_professores_json|safe }};
+const ocupacaoDetalh    = {{ ocupacao_detalhada_json|safe }};
+const ocupacaoLocal     = {{ ocupacao_local_json|safe }};
 const sugestaoPendentes = {{ sugestao_pendentes_json|safe }};
 
 // Estado
 let discAtiva = null;   // objeto da grade
 let pendentes = Object.assign({}, sugestaoPendentes);  // pré-carrega sugestão se houver
 let popupCelula = null; // célula com popup aberto
+let forcarMode = false; // ignora restrições de disponibilidade/ocupação
 
 // ─── Inicialização ───────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     renderTodasCelulas();
     atualizarResumo();
 
-    // Fechar popup ao clicar fora
+    // Fechar popups ao clicar fora
     document.addEventListener('click', e => {
         const popup = document.getElementById('local-popup');
         if (popupCelula && !popupCelula.contains(e.target) && !popup.contains(e.target)) {
             fecharPopup();
         }
+        const popupSalva = document.getElementById('popup-salva');
+        if (popupSalvaCelula && !popupSalvaCelula.contains(e.target) && !popupSalva.contains(e.target)) {
+            fecharPopupSalva();
+        }
     });
 });
+
+// ─── Modo Forçar ──────────────────────────────────────────────────────────
+function toggleForcar() {
+    forcarMode = document.getElementById('toggle-forcar').checked;
+    document.getElementById('banner-forcar').style.display = forcarMode ? 'block' : 'none';
+    const table = document.getElementById('grade-table');
+    if (forcarMode) table.classList.add('modo-forcar');
+    else table.classList.remove('modo-forcar');
+    if (discAtiva) renderTodasCelulas();
+}
+
+// Retorna o melhor professor disponível ignorando restrições de disponibilidade/ocupação.
+// Prioridade: 1º livre no banco (só falta disponib cadastrada), 2º sem restrição, 3º qualquer.
+function profForcadoNaCell(disc, dia, hid) {
+    const hNum = parseInt(hid);
+    const profs = disc.professores && disc.professores.length ? disc.professores : (
+        disc.id_professor ? [{ id: disc.id_professor, nome: disc.nome_professor }] : []
+    );
+    // 1ª prioridade: professor SEM conflito real no banco (não está em alocacao nesse slot)
+    for (const p of profs) {
+        const pid = String(p.id);
+        const profOcupado = (ocupacao[pid]?.[dia] || []).includes(hNum);
+        if (!profOcupado) return p; // livre no banco, só falta disponib
+    }
+    // 2ª prioridade: qualquer professor da disciplina (haverá conflito no banco)
+    return profs[0] || null;
+}
 
 // ─── Selecionar disciplina ────────────────────────────────────────────────
 function selectDisc(el) {
@@ -497,14 +644,164 @@ function selectDisc(el) {
     el.classList.add('ativa');
 
     const falta = disc.aulas_semanais - contarAlocadas(disc.id);
+    const profsLabel = disc.professores && disc.professores.length > 1
+        ? `${disc.professores.length} professores (auto-selecionado por disponibilidade)`
+        : (disc.nome_professor || '—');
     document.getElementById('hint-disciplina').innerHTML =
         `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${disc.cor};margin-right:6px;"></span>
-         <strong>${disc.nome}</strong> &nbsp;—&nbsp; ${disc.nome_professor || '—'} &nbsp;|&nbsp;
+         <strong>${disc.nome}</strong> &nbsp;—&nbsp; ${profsLabel} &nbsp;|&nbsp;
          faltam <strong>${Math.max(0,falta)}</strong> aula(s)`;
     document.getElementById('hint-disciplina').style.color = 'var(--cor-texto)';
     document.getElementById('grade-table').classList.add('modo-ativo');
 
     renderTodasCelulas();
+}
+
+// ─── Modal forçar professor ──────────────────────────────────────────────
+let modalForcarDados = null;
+
+function abrirModalForcar(td, dia, hid) {
+    if (!discAtiva) return;
+    const hNum = parseInt(hid);
+
+    const idsDisc = new Set((discAtiva.professores || []).map(p => String(p.id)));
+    const profsDisc = discAtiva.professores && discAtiva.professores.length
+        ? discAtiva.professores
+        : (discAtiva.id_professor ? [{ id: discAtiva.id_professor, nome: discAtiva.nome_professor }] : []);
+
+    const discLivres   = profsDisc.filter(p => !(ocupacao[String(p.id)]?.[dia] || []).includes(hNum));
+    const discOcupados = profsDisc.filter(p =>  (ocupacao[String(p.id)]?.[dia] || []).includes(hNum));
+
+    // Professores de OUTRAS disciplinas que estão livres neste slot
+    const subsLivres = todosProfs.filter(p =>
+        !idsDisc.has(String(p.id)) &&
+        !(ocupacao[String(p.id)]?.[dia] || []).includes(hNum)
+    );
+
+    const sel = document.getElementById('modal-forcar-sel');
+    sel.innerHTML = '';
+
+    if (discLivres.length) {
+        const grp = document.createElement('optgroup');
+        grp.label = `✅ Professores de ${discAtiva.nome} — livres`;
+        discLivres.forEach(p => {
+            const o = document.createElement('option');
+            o.value = p.id; o.textContent = p.nome;
+            grp.appendChild(o);
+        });
+        sel.appendChild(grp);
+    }
+
+    if (discOcupados.length) {
+        const grp = document.createElement('optgroup');
+        grp.label = `⛔ Professores de ${discAtiva.nome} — ocupados em outra turma`;
+        discOcupados.forEach(p => {
+            const pid = String(p.id);
+            const turmaNome = ocupacaoDetalh[pid]?.[dia]?.[hNum] || '?';
+            const o = document.createElement('option');
+            o.value = p.id;
+            o.textContent = `${p.nome} — conflito com ${turmaNome}`;
+            grp.appendChild(o);
+        });
+        sel.appendChild(grp);
+    }
+
+    if (subsLivres.length) {
+        const grp = document.createElement('optgroup');
+        grp.label = '👤 Substitutos disponíveis (outras disciplinas)';
+        subsLivres.forEach(p => {
+            const o = document.createElement('option');
+            o.value = p.id; o.textContent = p.nome;
+            grp.appendChild(o);
+        });
+        sel.appendChild(grp);
+    }
+
+    const hint = document.getElementById('modal-forcar-hint');
+    if (discLivres.length) {
+        hint.textContent = `Professor(es) de ${discAtiva.nome} disponível(is). Selecione abaixo.`;
+        hint.style.color = 'var(--cor-sucesso)';
+    } else {
+        hint.innerHTML = `Todos os professores de <strong>${discAtiva.nome}</strong> estão em outras turmas. `
+            + (subsLivres.length ? `Selecione um substituto ou realoque a turma conflitante.` : `Nenhum professor livre neste horário.`);
+        hint.style.color = 'var(--cor-erro)';
+    }
+
+    // Preenche select de locais — prioriza locais livres
+    const selLocal = document.getElementById('modal-forcar-local');
+    selLocal.innerHTML = '';
+    const localPadrao = document.getElementById('local-padrao').value;
+
+    const locaisLivres  = locaisLst.filter(l => !(ocupacaoLocal[String(l.id)]?.[dia] || []).includes(hNum));
+    const locaisOcupados = locaisLst.filter(l =>  (ocupacaoLocal[String(l.id)]?.[dia] || []).includes(hNum));
+
+    if (locaisLivres.length) {
+        const grp = document.createElement('optgroup');
+        grp.label = '✅ Locais livres neste horário';
+        locaisLivres.forEach(l => {
+            const o = document.createElement('option');
+            o.value = l.id;
+            o.textContent = l.nome;
+            if (String(l.id) === String(localPadrao)) o.selected = true;
+            grp.appendChild(o);
+        });
+        selLocal.appendChild(grp);
+    }
+    if (locaisOcupados.length) {
+        const grp = document.createElement('optgroup');
+        grp.label = '⚠️ Já ocupados (causará conflito)';
+        locaisOcupados.forEach(l => {
+            const o = document.createElement('option');
+            o.value = l.id;
+            o.textContent = l.nome;
+            if (String(l.id) === String(localPadrao) && !locaisLivres.length) o.selected = true;
+            grp.appendChild(o);
+        });
+        selLocal.appendChild(grp);
+    }
+
+    // Aviso se local padrão está ocupado
+    const localPadraoOcupado = (ocupacaoLocal[String(localPadrao)]?.[dia] || []).includes(hNum);
+    const hint2 = document.getElementById('modal-forcar-local-hint');
+    hint2.style.display = localPadraoOcupado ? 'block' : 'none';
+    // Auto-seleciona primeiro local livre se o padrão estiver ocupado
+    if (localPadraoOcupado && locaisLivres.length) selLocal.value = locaisLivres[0].id;
+
+    selLocal.onchange = () => {
+        const ocupado = (ocupacaoLocal[String(selLocal.value)]?.[dia] || []).includes(hNum);
+        hint2.style.display = ocupado ? 'block' : 'none';
+    };
+
+    modalForcarDados = { td, dia, hid };
+    document.getElementById('modal-forcar').style.display = 'flex';
+}
+
+function fecharModalForcar() {
+    document.getElementById('modal-forcar').style.display = 'none';
+    modalForcarDados = null;
+}
+
+function confirmarForcar() {
+    if (!modalForcarDados || !discAtiva) return;
+    const { td, dia, hid } = modalForcarDados;
+    const sel = document.getElementById('modal-forcar-sel');
+    const profId   = sel.value;
+    const profNome = (sel.options[sel.selectedIndex]?.textContent || '?').split(' —')[0];
+    const localId  = document.getElementById('modal-forcar-local').value;
+    const key = `${dia}|${hid}`;
+    pendentes[key] = {
+        id_disciplina: discAtiva.id,
+        id_professor:  profId,
+        id_local:      localId,
+        dia, id_horario: hid,
+        sigla: discAtiva.sigla,
+        cor:   discAtiva.cor,
+        prof:  profNome.split(' ')[0],
+    };
+    fecharModalForcar();
+    renderCelula(td, dia, hid);
+    atualizarProgresso(discAtiva.id);
+    atualizarBotaoSalvar();
 }
 
 // ─── Click em célula ─────────────────────────────────────────────────────
@@ -513,9 +810,11 @@ function clickCell(td) {
     const hid = td.dataset.hor;
     const key = `${dia}|${hid}`;
 
-    // Célula com alocação salva: abrir popup de local ou remover
+    // Célula com alocação salva: abrir popup para editar o local
     if (td.classList.contains('cell-salva')) {
-        // Não faz nada inline — usuário usa o X para deletar
+        const salva = alocSalvas[dia]?.[String(hid)];
+        if (!salva) return;
+        abrirPopupSalva(td, salva);
         return;
     }
 
@@ -526,19 +825,27 @@ function clickCell(td) {
         return;
     }
 
-    // Célula disponível: alocar disciplina ativa
+    // Célula forçável: abrir modal de seleção de professor substituto
+    if (td.classList.contains('cell-forcavel')) {
+        abrirModalForcar(td, dia, hid);
+        return;
+    }
+
+    // Célula disponível: alocar disciplina ativa com o professor livre naquele slot
     if (!discAtiva) return;
     if (!td.classList.contains('cell-disponivel')) return;
 
-    const localId = document.getElementById('local-padrao').value;
+    const localId  = document.getElementById('local-padrao').value;
+    const profId   = td.dataset.profId   || discAtiva.id_professor;
+    const profNome = td.dataset.profNome || (discAtiva.nome_professor || '').split(' ')[0];
     pendentes[key] = {
-        id_disciplina:  discAtiva.id,
-        id_professor:   discAtiva.id_professor,
-        id_local:       localId,
+        id_disciplina: discAtiva.id,
+        id_professor:  profId,
+        id_local:      localId,
         dia, id_horario: hid,
         sigla: discAtiva.sigla,
         cor:   discAtiva.cor,
-        prof:  (discAtiva.nome_professor || '').split(' ')[0],
+        prof:  profNome,
     };
 
     renderCelula(td, dia, hid);
@@ -597,6 +904,22 @@ function renderTodasCelulas() {
     });
 }
 
+function profLivreNaCell(disc, dia, hid) {
+    // Retorna o primeiro professor livre para a disciplina neste slot, ou null
+    const hNum = parseInt(hid);
+    const profs = disc.professores && disc.professores.length ? disc.professores : (
+        disc.id_professor ? [{ id: disc.id_professor, nome: disc.nome_professor }] : []
+    );
+    for (const p of profs) {
+        const pid = String(p.id);
+        const semRestricao = !(pid in disponib);
+        const temDisponib  = semRestricao || (disponib[pid]?.[dia] || []).includes(hNum);
+        const profOcupado  = (ocupacao[pid]?.[dia] || []).includes(hNum);
+        if (temDisponib && !profOcupado) return p;
+    }
+    return null;
+}
+
 function renderCelula(td, dia, hid) {
     const key   = `${dia}|${hid}`;
     const salva = alocSalvas[dia]?.[String(hid)];
@@ -604,6 +927,8 @@ function renderCelula(td, dia, hid) {
 
     td.className = '';
     td.innerHTML = '';
+    delete td.dataset.profId;
+    delete td.dataset.profNome;
 
     if (salva) {
         td.classList.add('cell-salva');
@@ -615,6 +940,7 @@ function renderCelula(td, dia, hid) {
             </div>
             <form method="POST" action="/deletar_alocacao_turma/${turmaId}/${salva.id_alocacao}"
                   style="position:absolute;top:1px;right:1px;"
+                  onclick="event.stopPropagation()"
                   onsubmit="return confirm('Remover esta alocação?')">
                 <button type="submit" class="btn-remover-slot" title="Remover">✕</button>
             </form>`;
@@ -641,22 +967,32 @@ function renderCelula(td, dia, hid) {
         return;
     }
 
-    const pid  = String(discAtiva.id_professor);
-    const hNum = parseInt(hid);
-
-    // Sem registros = sem restrição (mesmo comportamento das sugestões)
-    const semRestricao = !(pid in disponib);
-    const temDisponib = semRestricao || (disponib[pid]?.[dia] || []).includes(hNum);
-    const profOcupado = (ocupacao[pid]?.[dia]  || []).includes(hNum);
-
-    if (!temDisponib) {
-        td.classList.add('cell-vazia', 'cell-bloqueada');
-    } else if (profOcupado) {
-        td.classList.add('cell-vazia', 'cell-bloqueada');
-        td.style.background = '#fef2f2';
-    } else {
+    const prof = profLivreNaCell(discAtiva, dia, hid);
+    if (prof) {
         td.classList.add('cell-disponivel');
-        td.style.background = '';
+        td.dataset.profId   = prof.id;
+        td.dataset.profNome = prof.nome.split(' ')[0];
+    } else if (forcarMode) {
+        // Modo forçar: torna a célula clicável mesmo sem disponibilidade/com professor ocupado
+        const profForcado = profForcadoNaCell(discAtiva, dia, hid);
+        if (profForcado) {
+            td.classList.add('cell-disponivel', 'cell-forcavel');
+            td.dataset.profId   = profForcado.id;
+            td.dataset.profNome = profForcado.nome.split(' ')[0];
+            td.title = `⚠️ ${profForcado.nome.split(' ')[0]} sem disponibilidade ou ocupado — alocação forçada`;
+        } else {
+            td.classList.add('cell-vazia', 'cell-bloqueada');
+        }
+    } else {
+        // Todos os professores ocupados ou sem disponibilidade
+        const algumTemDisponib = (discAtiva.professores || []).some(p => {
+            const pid = String(p.id);
+            const hNum = parseInt(hid);
+            const semR = !(pid in disponib);
+            return semR || (disponib[pid]?.[dia] || []).includes(hNum);
+        });
+        td.classList.add('cell-vazia', 'cell-bloqueada');
+        if (algumTemDisponib) td.style.background = '#fef2f2'; // prof tem disp mas está ocupado
     }
 }
 
@@ -716,6 +1052,28 @@ function atualizarBotaoSalvar() {
     // Atualizar todos os progressos
     gradeDisc.forEach(d => atualizarProgresso(d.id));
     atualizarResumo();
+}
+
+// ─── Popup de edição de alocação salva ───────────────────────────────────
+let popupSalvaCelula = null;
+
+function abrirPopupSalva(td, salva) {
+    fecharPopupSalva();
+    fecharPopup();
+    popupSalvaCelula = td;
+    const popup = document.getElementById('popup-salva');
+    document.getElementById('form-editar-local').action = `/atualizar_local_alocacao/${salva.id_alocacao}`;
+    document.getElementById('form-deletar-salva').action = `/deletar_alocacao_turma/${turmaId}/${salva.id_alocacao}`;
+    document.getElementById('popup-salva-sel').value = salva.id_local || '';
+    td.appendChild(popup);
+    popup.classList.add('visivel');
+}
+
+function fecharPopupSalva() {
+    const popup = document.getElementById('popup-salva');
+    popup.classList.remove('visivel');
+    document.body.appendChild(popup);
+    popupSalvaCelula = null;
 }
 
 // ─── Submit ───────────────────────────────────────────────────────────────

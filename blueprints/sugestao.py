@@ -249,8 +249,11 @@ def registrar(app):
             cursor.execute("SELECT id_horario FROM horario_aula WHERE eh_intervalo = 0 ORDER BY hora_inicio")
             horario_ids = [h['id_horario'] for h in cursor.fetchall()]
 
-            # Locais ativos
-            cursor.execute("SELECT id_local AS id, nome FROM `local` WHERE status = 'ativo' ORDER BY nome")
+            # Locais ativos — tipo 'Aula' primeiro para o algoritmo preferir salas comuns
+            cursor.execute("""
+                SELECT id_local AS id, nome, tipo FROM `local` WHERE status = 'ativo'
+                ORDER BY CASE WHEN tipo = 'Aula' THEN 0 ELSE 1 END, nome
+            """)
             locais = cursor.fetchall()
 
             # Carregar alocações existentes para não sugerir o que já está alocado
@@ -453,6 +456,7 @@ def registrar(app):
     @requer_perfil('diretor', 'secretaria')
     def executar_alocacao_automatica():
         id_turno = request.form.get('id_turno', '').strip()
+        limpar_antes = request.form.get('limpar_antes') == '1'
         if not id_turno:
             flash("Selecione um turno.", 'erro')
             return redirect(url_for('alocacao_automatica'))
@@ -465,6 +469,14 @@ def registrar(app):
             if not turno:
                 flash("Turno não encontrado.", 'erro')
                 return redirect(url_for('alocacao_automatica'))
+
+            if limpar_antes:
+                cursor.execute("""
+                    DELETE a FROM alocacao a
+                    JOIN turma t ON a.id_turma = t.id_turma
+                    WHERE t.id_turno = %s
+                """, (id_turno,))
+                conexao.commit()
 
             # Mesma query de grade da rota gerar_sugestoes
             cursor.execute("""
@@ -509,7 +521,10 @@ def registrar(app):
             cursor.execute("SELECT id_horario FROM horario_aula WHERE eh_intervalo = 0 ORDER BY hora_inicio")
             horario_ids = [h['id_horario'] for h in cursor.fetchall()]
 
-            cursor.execute("SELECT id_local AS id, nome FROM `local` WHERE status = 'ativo' ORDER BY nome")
+            cursor.execute("""
+                SELECT id_local AS id, nome, tipo FROM `local` WHERE status = 'ativo'
+                ORDER BY CASE WHEN tipo = 'Aula' THEN 0 ELSE 1 END, nome
+            """)
             locais = cursor.fetchall()
 
             if not horario_ids:

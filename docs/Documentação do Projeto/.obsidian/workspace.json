@@ -160,8 +160,19 @@
               "icon": "lucide-list",
               "title": "Sumário de Restrições e Especificações"
             }
+          },
+          {
+            "id": "8f5d152c12a3a0d6",
+            "type": "leaf",
+            "state": {
+              "type": "copilot-chat-view",
+              "state": {},
+              "icon": "message-square",
+              "title": "Copilot"
+            }
           }
-        ]
+        ],
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
@@ -182,11 +193,12 @@
   },
   "active": "f32f9749bb4d61ce",
   "lastOpenFiles": [
+    "Visão Geral.md",
+    "Banco de Dados.md",
     "Deploy.md",
     "Restrições e Especificações.md",
     "Bem-vindo.md",
     "Visual e Tema.md",
-    "Visão Geral.md",
     "Autenticação.md",
     "Alocação e Sugestões.md",
     "copilot/copilot-custom-prompts/Clip Web Page.md",
@@ -209,7 +221,6 @@
     "Bem-vindo.md.tmp.22816.1777159558900",
     "Deploy.md.tmp.22816.1777159551230",
     "Autenticação.md.tmp.22816.1777159541585",
-    "Módulos (Blueprints).md",
-    "Banco de Dados.md"
+    "Módulos (Blueprints).md"
   ]
 }

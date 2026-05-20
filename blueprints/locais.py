@@ -81,8 +81,12 @@ def registrar(app):
     @app.route('/deletar_local/<int:id_local>', methods=['POST'])
     @requer_perfil('diretor', 'secretaria')
     def deletar_local(id_local):
-        with conectar() as conexao:
-            cursor = conexao.cursor()
-            cursor.execute('DELETE FROM `local` WHERE id_local = %s', (id_local,))
-            conexao.commit()
+        try:
+            with conectar() as conexao:
+                cursor = conexao.cursor()
+                cursor.execute('DELETE FROM `local` WHERE id_local = %s', (id_local,))
+                conexao.commit()
+        except pymysql.IntegrityError:
+            flash("Não é possível excluir este local pois ele está sendo usado em alocações. "
+                  "Remova as alocações relacionadas ou desative o local.", 'erro')
         return redirect(url_for('listar_locais'))

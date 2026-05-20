@@ -43,30 +43,46 @@ def registrar(app):
             if not turma:
                 return redirect(url_for('selecionar_turma_alocacao'))
 
-            # Grade curricular da turma com professor já vinculado
+            # Grade curricular — contagem de alocadas por disciplina
             cursor.execute("""
                 SELECT gc.id_disciplina, gc.aulas_semanais,
                        d.nome AS nome_disciplina, d.sigla, d.cor,
-                       MIN(p.id_professor)           AS id_professor,
-                       MIN(p.nome)                   AS nome_professor,
                        COUNT(DISTINCT a.id_alocacao) AS ja_alocadas
                 FROM grade_curricular gc
                 JOIN turma t ON gc.id_turno = t.id_turno AND gc.serie = t.serie
                 JOIN disciplina d ON gc.id_disciplina = d.id_disciplina
-                LEFT JOIN professor_disciplina pd ON pd.id_disciplina = gc.id_disciplina
-                LEFT JOIN professor p ON p.id_professor = pd.id_professor AND p.status = 'ativo'
                 LEFT JOIN alocacao a ON a.id_turma = t.id_turma AND a.id_disciplina = gc.id_disciplina
                 WHERE t.id_turma = %s
-                GROUP BY gc.id_disciplina, gc.aulas_semanais,
-                         d.nome, d.sigla, d.cor
+                GROUP BY gc.id_disciplina, gc.aulas_semanais, d.nome, d.sigla, d.cor
                 ORDER BY d.nome
             """, (id_turma,))
-            grade = cursor.fetchall()
+            grade_base = cursor.fetchall()
+
+            # Todos os professores habilitados por disciplina
+            cursor.execute("""
+                SELECT pd.id_disciplina, p.id_professor, p.nome
+                FROM professor_disciplina pd
+                JOIN professor p ON p.id_professor = pd.id_professor AND p.status = 'ativo'
+            """)
+            profs_por_disc = {}
+            for row in cursor.fetchall():
+                profs_por_disc.setdefault(row['id_disciplina'], []).append(
+                    {'id': row['id_professor'], 'nome': row['nome']}
+                )
+
+            grade = []
+            for g in grade_base:
+                g = dict(g)
+                g['professores'] = profs_por_disc.get(g['id_disciplina'], [])
+                first = g['professores'][0] if g['professores'] else {}
+                g['id_professor']   = first.get('id')
+                g['nome_professor'] = first.get('nome')
+                grade.append(g)
 
             # Alocações atuais desta turma
             cursor.execute("""
                 SELECT a.id_alocacao, a.dia_semana, a.id_horario,
-                       a.id_disciplina, a.id_professor,
+                       a.id_disciplina, a.id_professor, a.id_local,
                        d.sigla, d.cor, p.nome AS prof_nome
                 FROM alocacao a
                 JOIN disciplina d ON a.id_disciplina = d.id_disciplina
@@ -78,19 +94,29 @@ def registrar(app):
                 dia = a['dia_semana']
                 hid = str(a['id_horario'])
                 alocacoes_atuais.setdefault(dia, {})[hid] = {
-                    'id_alocacao':  a['id_alocacao'],
+                    'id_alocacao':   a['id_alocacao'],
                     'id_disciplina': a['id_disciplina'],
+                    'id_local':      a['id_local'],
                     'sigla': a['sigla'],
                     'cor':   a['cor'],
                     'prof':  (a['prof_nome'] or '').split()[0],
                 }
 
-            # Ocupação de TODOS os professores (para detectar conflito)
-            cursor.execute("SELECT id_professor, dia_semana, id_horario FROM alocacao")
+            # Ocupação de TODOS os professores e locais (para detectar conflitos)
+            cursor.execute("""
+                SELECT a.id_professor, a.id_local, a.dia_semana, a.id_horario, t.nome AS nome_turma
+                FROM alocacao a
+                JOIN turma t ON a.id_turma = t.id_turma
+            """)
             ocupacao = {}
+            ocupacao_detalhada = {}
+            ocupacao_local = {}  # {id_local: {dia: [id_horario, ...]}}
             for a in cursor.fetchall():
                 pid = str(a['id_professor'])
+                lid = str(a['id_local'])
                 ocupacao.setdefault(pid, {}).setdefault(a['dia_semana'], []).append(a['id_horario'])
+                ocupacao_detalhada.setdefault(pid, {}).setdefault(a['dia_semana'], {})[a['id_horario']] = a['nome_turma']
+                ocupacao_local.setdefault(lid, {}).setdefault(a['dia_semana'], []).append(a['id_horario'])
 
             # Disponibilidades dos professores
             cursor.execute("""
@@ -107,6 +133,9 @@ def registrar(app):
 
             cursor.execute("SELECT * FROM `local` WHERE status = 'ativo' ORDER BY nome")
             locais = cursor.fetchall()
+
+            cursor.execute("SELECT id_professor, nome FROM professor WHERE status = 'ativo' ORDER BY nome")
+            todos_professores = cursor.fetchall()
 
             # Carregar pendentes de sugestão, se solicitado
             sugestao_pendentes = {}
@@ -145,7 +174,10 @@ def registrar(app):
                 if not slots:
                     flash("Nenhuma alocação para salvar.", 'erro')
                 else:
-                    inseridos = conflitos = 0
+                    inseridos = 0
+                    erros_prof = []
+                    erros_local = []
+                    erros_turma = []
                     for s in slots:
                         id_disc = s.get('id_disciplina')
                         id_prof = s.get('id_professor')
@@ -163,25 +195,36 @@ def registrar(app):
                             """, (id_turma, id_disc, id_prof, id_loc, dia, id_hor))
                             cursor.execute("RELEASE SAVEPOINT sp")
                             inseridos += 1
-                        except pymysql.IntegrityError:
+                        except pymysql.IntegrityError as e:
                             cursor.execute("ROLLBACK TO SAVEPOINT sp")
-                            conflitos += 1
+                            err = str(e.args[1]) if len(e.args) > 1 else ''
+                            if 'id_local' in err:
+                                erros_local.append(dia)
+                            elif 'id_professor' in err:
+                                erros_prof.append(dia)
+                            else:
+                                erros_turma.append(dia)
                     conexao.commit()
-                    if conflitos:
-                        flash(f"{conflitos} conflito(s) ignorado(s): horário já ocupado.", 'erro')
+                    if erros_local:
+                        flash(f"Local já ocupado neste horário ({', '.join(erros_local)}). Escolha outro local.", 'erro')
+                    if erros_prof:
+                        flash(f"Professor já alocado em outra turma ({', '.join(erros_prof)}).", 'erro')
+                    if erros_turma:
+                        flash(f"Turma já possui aula neste horário ({', '.join(erros_turma)}).", 'erro')
                     if inseridos:
                         flash(f"{inseridos} alocação(ões) salvas com sucesso!", 'sucesso')
                     return redirect(url_for('alocar_turma_completa', id_turma=id_turma))
 
         grade_json = json.dumps([{
-            'id':          g['id_disciplina'],
-            'nome':        g['nome_disciplina'],
-            'sigla':       g['sigla'],
-            'cor':         g['cor'],
-            'id_professor': g['id_professor'],
+            'id':             g['id_disciplina'],
+            'nome':           g['nome_disciplina'],
+            'sigla':          g['sigla'],
+            'cor':            g['cor'],
+            'professores':    g['professores'],
+            'id_professor':   g['id_professor'],
             'nome_professor': g['nome_professor'] or '—',
             'aulas_semanais': g['aulas_semanais'],
-            'ja_alocadas': g['ja_alocadas'],
+            'ja_alocadas':    g['ja_alocadas'],
         } for g in grade])
 
         return render_template('alocar_turma.html',
@@ -198,9 +241,28 @@ def registrar(app):
             locais_json=json.dumps([{
                 'id': l['id_local'], 'nome': l['nome']
             } for l in locais]),
+            todos_professores_json=json.dumps([{'id': p['id_professor'], 'nome': p['nome']} for p in todos_professores]),
+            ocupacao_detalhada_json=json.dumps(ocupacao_detalhada),
+            ocupacao_local_json=json.dumps(ocupacao_local),
             sugestao_pendentes_json=json.dumps(sugestao_pendentes),
             sugestao_id=sugestao_id,
         )
+
+    @app.route('/atualizar_local_alocacao/<int:id_alocacao>', methods=['POST'])
+    @requer_perfil('diretor', 'secretaria')
+    def atualizar_local_alocacao(id_alocacao):
+        id_local = request.form.get('id_local', '').strip()
+        id_turma = request.form.get('id_turma', '').strip()
+        if id_local:
+            with conectar() as conexao:
+                cursor = conexao.cursor()
+                cursor.execute(
+                    "UPDATE alocacao SET id_local = %s WHERE id_alocacao = %s",
+                    (id_local, id_alocacao)
+                )
+                conexao.commit()
+            flash("Local atualizado.", 'sucesso')
+        return redirect(url_for('alocar_turma_completa', id_turma=id_turma))
 
     @app.route('/deletar_alocacao_turma/<int:id_turma>/<int:id_alocacao>', methods=['POST'])
     @requer_perfil('diretor', 'secretaria')
@@ -484,6 +546,38 @@ def registrar(app):
             cursor.execute("DELETE FROM alocacao WHERE id_alocacao = %s", (id_alocacao,))
             conexao.commit()
         return redirect(url_for('selecionar_turno_alocacoes'))
+
+    @app.route('/deletar_todas_alocacoes_turma/<int:id_turma>', methods=['POST'])
+    @requer_perfil('diretor', 'secretaria')
+    def deletar_todas_alocacoes_turma(id_turma):
+        with conectar() as conexao:
+            cursor = conexao.cursor()
+            cursor.execute("SELECT COUNT(*) AS total FROM alocacao WHERE id_turma = %s", (id_turma,))
+            total = cursor.fetchone()['total']
+            cursor.execute("DELETE FROM alocacao WHERE id_turma = %s", (id_turma,))
+            conexao.commit()
+        flash(f"{total} alocação(ões) excluída(s).", 'sucesso')
+        return redirect(url_for('alocar_turma_completa', id_turma=id_turma))
+
+    @app.route('/deletar_todas_alocacoes_turno/<int:id_turno>', methods=['POST'])
+    @requer_perfil('diretor', 'secretaria')
+    def deletar_todas_alocacoes_turno(id_turno):
+        with conectar() as conexao:
+            cursor = conexao.cursor()
+            cursor.execute("""
+                SELECT COUNT(*) AS total FROM alocacao a
+                JOIN turma t ON a.id_turma = t.id_turma
+                WHERE t.id_turno = %s
+            """, (id_turno,))
+            total = cursor.fetchone()['total']
+            cursor.execute("""
+                DELETE a FROM alocacao a
+                JOIN turma t ON a.id_turma = t.id_turma
+                WHERE t.id_turno = %s
+            """, (id_turno,))
+            conexao.commit()
+        flash(f"{total} alocação(ões) excluída(s) do turno.", 'sucesso')
+        return redirect(url_for('listar_alocacoes_turno', id_turno=id_turno))
 
 
 def _agregar_alocacoes(registros):

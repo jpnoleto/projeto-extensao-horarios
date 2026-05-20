@@ -161,6 +161,10 @@
         <a href="{{ url_for('selecionar_turma_alocacao') }}" class="btn btn-acento">⚡ Alocar por Grade</a>
         <a href="{{ url_for('cadastrar_alocacao') }}" class="btn btn-secundario">+ Individual</a>
         <a href="{{ url_for('selecionar_turno_alocacoes') }}" class="btn btn-secundario">Outro Turno</a>
+        <form method="POST" action="{{ url_for('deletar_todas_alocacoes_turno', id_turno=turno['id_turno']) }}"
+              onsubmit="return confirm('Excluir TODAS as alocações do turno {{ turno["nome"] }}? Esta ação não pode ser desfeita.')">
+            <button type="submit" class="btn-perigo">🗑 Excluir Todas</button>
+        </form>
     </div>
 </div>
 
