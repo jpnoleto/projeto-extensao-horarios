@@ -12,6 +12,7 @@ from blueprints import (
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'escola_horarios_chave_secreta_2024')
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 autenticacao.registrar(app)
 professores.registrar(app)

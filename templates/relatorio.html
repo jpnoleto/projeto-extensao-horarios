@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Grade Horária — {{ turno['nome'] }}</title>
     <style>
-        @page { size: A4 landscape; margin: 5mm; }
+        @page { size: A4 landscape; margin: 0.2cm; }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -12,7 +12,7 @@
             font-family: Arial, sans-serif;
             background: #fff;
             color: #000;
-            font-size: 9px;
+            font-size: 13px;
         }
 
         /* Paleta da logo */
@@ -72,13 +72,13 @@
         }
 
         .rel-header-info { flex: 1; }
-        .rel-escola { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
-        .rel-info   { font-size: 8.5px; opacity: 0.85; margin-top: 1px; }
+        .rel-escola { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+        .rel-info   { font-size: 12.5px; opacity: 0.85; margin-top: 1px; }
 
         .rel-turno-badge {
             background: var(--laranja);
             color: #fff;
-            font-weight: 900; font-size: 12px;
+            font-weight: 900; font-size: 18px;
             padding: 4px 12px; border-radius: 3px;
             text-transform: uppercase; letter-spacing: 1px;
             flex-shrink: 0;
@@ -91,7 +91,7 @@
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
-            font-size: 7.5px;
+            font-size: 11.5px;
         }
 
         th, td {
@@ -105,7 +105,7 @@
 
         /* Cabeçalho de turmas (primeira linha) */
         .th-turma {
-            font-size: 7px;
+            font-size: 11px;
             font-weight: 700;
             background: var(--crim2);
             color: #fff;
@@ -114,7 +114,7 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .th-turma span { font-size: 6px; opacity: 0.8; }
+        .th-turma span { font-size: 9px; opacity: 0.8; }
 
         /* Células de cabeçalho fixas */
         .th-vazio {
@@ -126,7 +126,7 @@
         /* Coluna do DIA (vertical, esquerda) */
         .td-dia {
             width: 18px;
-            font-size: 8px;
+            font-size: 12px;
             font-weight: 900;
             background: var(--crim);
             color: #fff;
@@ -144,7 +144,7 @@
         /* Coluna número da aula */
         .td-num {
             width: 20px;
-            font-size: 8px;
+            font-size: 12px;
             font-weight: 900;
             background: #eef2f7;
             color: #333;
@@ -155,7 +155,7 @@
         /* Coluna horário */
         .td-hora {
             width: 36px;
-            font-size: 6.5px;
+            font-size: 10.5px;
             background: #eef2f7;
             color: #444;
             line-height: 1.3;
@@ -166,7 +166,7 @@
         /* Célula com alocação */
         .celula {
             height: 28px;
-            font-size: 7px;
+            font-size: 11px;
             line-height: 1.15;
             font-weight: 700;
             color: #fff;
@@ -174,8 +174,8 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .celula .sigla { display: block; font-size: 7.5px; font-weight: 900; }
-        .celula .prof  { display: block; font-size: 6px; font-weight: 400; margin-top: 1px; opacity: 0.92; }
+        .celula .sigla { display: block; font-size: 11.5px; font-weight: 900; }
+        .celula .prof  { display: block; font-size: 9.5px; font-weight: 400; margin-top: 1px; opacity: 0.92; }
 
         /* Célula vazia */
         .vazia { background: #fafafa; height: 28px; }
@@ -185,7 +185,7 @@
             background: #fff3cd;
             writing-mode: vertical-rl;
             transform: rotate(180deg);
-            font-size: 6.5px;
+            font-size: 10.5px;
             font-weight: 700;
             color: #7a5a00;
             border-top: 1px solid var(--laranja) !important;
@@ -196,7 +196,7 @@
         .td-intervalo-num, .td-intervalo-hora {
             background: #fff3cd;
             color: #7a5a00;
-            font-size: 6px;
+            font-size: 10px;
             border-top: 1px solid var(--laranja) !important;
             border-bottom: 1px solid var(--laranja) !important;
             -webkit-print-color-adjust: exact;
@@ -206,7 +206,7 @@
             background: #fff3cd;
             color: #7a5a00;
             font-weight: 900;
-            font-size: 8px;
+            font-size: 12px;
             letter-spacing: 2px;
             height: 18px;
             border-top: 1px solid var(--laranja) !important;
@@ -229,32 +229,40 @@
         .rodape {
             text-align: right;
             color: #888;
-            font-size: 7px;
+            font-size: 11px;
             padding: 3px 0;
         }
 
         /* === IMPRESSÃO === */
         @media print {
+            {% set _nd = dias|length -%}
+            {% set _ni = horarios | selectattr('eh_intervalo') | list | length -%}
+            {% set _na = horarios | rejectattr('eh_intervalo') | list | length -%}
+            {% set _th = 33 + 15 + (_nd - 1) + _nd * (_na * 19 + _ni * 11) -%}
+            {% set _rz = 778.38 / _th -%}
+            {% set _pz = [0.5, [_rz, 1.5] | min] | max %}
+            html { zoom: {{ _pz | round(4) }}; }
             .no-print { display: none !important; }
             .relatorio-wrapper { padding: 0; }
-            @page { size: A4 landscape; margin: 5mm; }
-            body { font-size: 7px; }
-            table { font-size: 6.5px; }
+            @page { size: A4 landscape; margin: 0.2cm; }
+            body { font-size: 10px; }
+            table { font-size: 9px; }
             th, td { padding: 1px !important; }
-            .celula, .vazia { height: 19px !important; }
-            .celula .sigla { font-size: 6px !important; }
-            .celula .prof  { font-size: 5px !important; margin-top: 0 !important; }
-            .rel-logo { height: 30px !important; }
-            .rel-escola { font-size: 8px !important; }
-            .rel-info   { font-size: 6.5px !important; }
-            .rel-turno-badge { font-size: 9px !important; padding: 3px 8px !important; }
-            .th-turma { height: 20px !important; font-size: 6px !important; }
-            .th-turma span { font-size: 5px !important; }
-            .td-hora { font-size: 5.5px !important; width: 28px !important; }
-            .td-dia  { font-size: 6.5px !important; width: 14px !important; }
-            .td-num  { font-size: 6.5px !important; width: 15px !important; }
+            .celula, .vazia { height: 17px !important; overflow: hidden; }
+            .celula .sigla { font-size: 9px !important; }
+            .celula .prof  { font-size: 7px !important; margin-top: 0 !important; }
+            .rel-header { padding: 2px 6px !important; margin-bottom: 2px !important; }
+            .rel-logo { height: 22px !important; }
+            .rel-escola { font-size: 10px !important; }
+            .rel-info   { font-size: 8.5px !important; }
+            .rel-turno-badge { font-size: 11px !important; padding: 2px 6px !important; }
+            .th-turma { height: 15px !important; font-size: 8px !important; line-height: 1 !important; }
+            .th-turma span { font-size: 7px !important; }
+            .td-hora { font-size: 7.5px !important; width: 26px !important; height: 19px !important; overflow: hidden; line-height: 1.15 !important; }
+            .td-dia  { font-size: 8px !important; width: 12px !important; }
+            .td-num  { font-size: 8px !important; width: 13px !important; }
             .tr-separador td { height: 1px !important; }
-            .celula-intervalo { height: 14px !important; font-size: 6px !important; letter-spacing: 1px !important; }
+            .celula-intervalo { height: 11px !important; font-size: 7px !important; letter-spacing: 0 !important; }
         }
 
         /* === TELA === */
@@ -262,7 +270,7 @@
             body { background: #dde3ec; }
             .relatorio-wrapper { max-width: 1500px; margin: 0 auto; padding: 14px; }
             .celula, .vazia { height: 32px; }
-            table { font-size: 8.5px; }
+            table { font-size: 12.5px; }
         }
     </style>
 </head>
@@ -382,6 +390,7 @@
         const info = document.getElementById('rel-data-info');
         if (info) info.textContent = 'Grade Horária — ' + d + '/' + m + '/' + y;
     }
+
 </script>
 </body>
 </html>
