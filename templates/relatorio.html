@@ -258,13 +258,17 @@
         @media print {
             {% set _nd = dias|length -%}
             {% set _na = horarios | rejectattr('eh_intervalo') | list | length -%}
-            {% set _th = 35 + (_nd - 1) * 5 + _nd * _na * 24 -%}
-            {% set _rz = 645 / _th -%}
+            {% set _th = 45 + (_nd - 1) * 5 + _nd * _na * 24 -%}
+            {% set _rz = 620 / _th -%}
             {% set _pz = [0.4, [_rz, 1.0] | min] | max %}
             html { zoom: {{ _pz | round(4) }}; }
             .no-print { display: none !important; }
-            .relatorio-wrapper { padding: 0 !important; }
-            @page { size: A4 landscape; margin: 2mm; }
+            /* Margem 2mm: aplicada no @page (Chrome respeita em --print-to-pdf
+               quando precedido por width/height) E também no body como fallback
+               (o zoom encolhe um pouco, mas garante margem visível). */
+            @page { size: 297mm 210mm; margin: 2mm; }
+            html, body { margin: 0 !important; padding: 0 !important; }
+            .relatorio-wrapper { padding: 0 !important; margin: 0 !important; }
             body { font-size: 11px; }
             table { font-size: 10px; }
             th, td { padding: 0 1px !important; }
@@ -274,12 +278,15 @@
             .celula, .vazia { height: 23px !important; padding: 0 !important; overflow: hidden; line-height: 1.0 !important; }
             .celula .sigla { font-size: 12px !important; font-weight: 900 !important; line-height: 1.0 !important; letter-spacing: 0.2px !important; }
             .celula .prof  { font-size: 10px !important; font-weight: 500 !important; line-height: 1.0 !important; margin-top: 0 !important; opacity: 1 !important; }
-            .th-turno-label { font-size: 7px !important; padding: 1px 2px !important; letter-spacing: 1px !important; border-bottom-width: 1px !important; }
-            .th-turma { height: 16px !important; font-size: 9px !important; line-height: 1 !important; }
-            .th-turma span { font-size: 7px !important; }
-            .td-hora { font-size: 7px !important; height: 23px !important; padding: 0 !important; overflow: hidden; line-height: 1.0 !important; }
-            .td-dia  { font-size: 7px !important; padding: 2px 0 !important; letter-spacing: 0 !important; }
-            .td-num  { font-size: 7px !important; padding: 0 !important; }
+            col.col-dia  { width: 12px !important; }
+            col.col-num  { width: 14px !important; }
+            col.col-hora { width: 30px !important; }
+            .th-turno-label { font-size: 6.5px !important; padding: 2px 2px !important; letter-spacing: 0.6px !important; border-bottom-width: 1px !important; }
+            .th-turma { height: 22px !important; font-size: 12px !important; line-height: 1 !important; padding: 1px !important; }
+            .th-turma span { font-size: 8px !important; }
+            .td-hora { font-size: 9px !important; height: 23px !important; padding: 0 1px !important; overflow: hidden; line-height: 1.1 !important; }
+            .td-dia  { font-size: 8px !important; padding: 2px 0 !important; letter-spacing: 0 !important; }
+            .td-num  { font-size: 8.5px !important; padding: 0 !important; }
             .tr-separador td { height: 5px !important; }
         }
 
@@ -303,9 +310,15 @@
 <div class="relatorio-wrapper">
 
     <table>
+        <colgroup>
+            <col class="col-dia">
+            <col class="col-num">
+            <col class="col-hora">
+            {% for turma in turmas %}<col>{% endfor %}
+        </colgroup>
         <thead>
             <tr>
-                <th class="th-turno-label" style="width:34px;" colspan="3">{{ turno['nome'] }}</th>
+                <th class="th-turno-label" colspan="3">{{ turno['nome'] }}</th>
                 {% for turma in turmas %}
                     <th class="th-turma">
                         {{ turma['serie'] }}ª {{ turma['nome'] }}<br>
