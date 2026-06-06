@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Grade Horária — {{ turno['nome'] }}</title>
     <style>
-        @page { size: A4 landscape; margin: 0.2cm; }
+        @page { size: A4 landscape; margin: 2mm; }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -94,6 +94,11 @@
             font-size: 11.5px;
         }
 
+        /* Largura das colunas fixas (table-layout: fixed usa colgroup) */
+        col.col-dia  { width: 18px; }
+        col.col-num  { width: 20px; }
+        col.col-hora { width: 36px; }
+
         th, td {
             border: 1px solid #aaa;
             text-align: center;
@@ -119,6 +124,21 @@
         /* Células de cabeçalho fixas */
         .th-vazio {
             background: var(--crim);
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Etiqueta do turno (canto superior esquerdo da tabela) */
+        .th-turno-label {
+            background: var(--crim);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 4px 6px;
+            border-bottom: 2px solid var(--laranja);
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -174,8 +194,8 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .celula .sigla { display: block; font-size: 11.5px; font-weight: 900; }
-        .celula .prof  { display: block; font-size: 9.5px; font-weight: 400; margin-top: 1px; opacity: 0.92; }
+        .celula .sigla { display: block; font-size: 13px; font-weight: 900; letter-spacing: 0.2px; }
+        .celula .prof  { display: block; font-size: 11px; font-weight: 500; margin-top: 1px; opacity: 1; }
 
         /* Célula vazia */
         .vazia { background: #fafafa; height: 28px; }
@@ -217,10 +237,11 @@
 
         /* Separador entre dias */
         .tr-separador td {
-            height: 2px;
+            height: 5px;
             background: var(--crim);
             padding: 0;
             border: none;
+            box-shadow: inset 0 1px 0 var(--laranja), inset 0 -1px 0 var(--laranja);
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -236,33 +257,30 @@
         /* === IMPRESSÃO === */
         @media print {
             {% set _nd = dias|length -%}
-            {% set _ni = horarios | selectattr('eh_intervalo') | list | length -%}
             {% set _na = horarios | rejectattr('eh_intervalo') | list | length -%}
-            {% set _th = 33 + 15 + (_nd - 1) + _nd * (_na * 19 + _ni * 11) -%}
-            {% set _rz = 778.38 / _th -%}
-            {% set _pz = [0.5, [_rz, 1.5] | min] | max %}
+            {% set _th = 35 + (_nd - 1) * 5 + _nd * _na * 24 -%}
+            {% set _rz = 645 / _th -%}
+            {% set _pz = [0.4, [_rz, 1.0] | min] | max %}
             html { zoom: {{ _pz | round(4) }}; }
             .no-print { display: none !important; }
-            .relatorio-wrapper { padding: 0; }
-            @page { size: A4 landscape; margin: 0.2cm; }
-            body { font-size: 10px; }
-            table { font-size: 9px; }
-            th, td { padding: 1px !important; }
-            .celula, .vazia { height: 17px !important; overflow: hidden; }
-            .celula .sigla { font-size: 9px !important; }
-            .celula .prof  { font-size: 7px !important; margin-top: 0 !important; }
-            .rel-header { padding: 2px 6px !important; margin-bottom: 2px !important; }
-            .rel-logo { height: 22px !important; }
-            .rel-escola { font-size: 10px !important; }
-            .rel-info   { font-size: 8.5px !important; }
-            .rel-turno-badge { font-size: 11px !important; padding: 2px 6px !important; }
-            .th-turma { height: 15px !important; font-size: 8px !important; line-height: 1 !important; }
+            .relatorio-wrapper { padding: 0 !important; }
+            @page { size: A4 landscape; margin: 2mm; }
+            body { font-size: 11px; }
+            table { font-size: 10px; }
+            th, td { padding: 0 1px !important; }
+            col.col-dia  { width: 8px !important; }
+            col.col-num  { width: 8px !important; }
+            col.col-hora { width: 18px !important; }
+            .celula, .vazia { height: 23px !important; padding: 0 !important; overflow: hidden; line-height: 1.0 !important; }
+            .celula .sigla { font-size: 12px !important; font-weight: 900 !important; line-height: 1.0 !important; letter-spacing: 0.2px !important; }
+            .celula .prof  { font-size: 10px !important; font-weight: 500 !important; line-height: 1.0 !important; margin-top: 0 !important; opacity: 1 !important; }
+            .th-turno-label { font-size: 7px !important; padding: 1px 2px !important; letter-spacing: 1px !important; border-bottom-width: 1px !important; }
+            .th-turma { height: 16px !important; font-size: 9px !important; line-height: 1 !important; }
             .th-turma span { font-size: 7px !important; }
-            .td-hora { font-size: 7.5px !important; width: 26px !important; height: 19px !important; overflow: hidden; line-height: 1.15 !important; }
-            .td-dia  { font-size: 8px !important; width: 12px !important; }
-            .td-num  { font-size: 8px !important; width: 13px !important; }
-            .tr-separador td { height: 1px !important; }
-            .celula-intervalo { height: 11px !important; font-size: 7px !important; letter-spacing: 0 !important; }
+            .td-hora { font-size: 7px !important; height: 23px !important; padding: 0 !important; overflow: hidden; line-height: 1.0 !important; }
+            .td-dia  { font-size: 7px !important; padding: 2px 0 !important; letter-spacing: 0 !important; }
+            .td-num  { font-size: 7px !important; padding: 0 !important; }
+            .tr-separador td { height: 5px !important; }
         }
 
         /* === TELA === */
@@ -284,25 +302,10 @@
 
 <div class="relatorio-wrapper">
 
-    <div class="rel-header">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="rel-logo"
-             onerror="this.style.display='none'">
-        <div class="rel-header-info">
-            {% if nome_escola %}
-                <div class="rel-escola">{{ nome_escola }}</div>
-            {% endif %}
-            <div class="rel-info" id="rel-data-info">Grade Horária{% if data_rel %} — {{ data_rel|replace('-', '/') }}{% endif %}</div>
-        </div>
-        <div class="rel-turno-badge">{{ turno['nome'] }}</div>
-    </div>
-
     <table>
         <thead>
             <tr>
-                <!-- Dia | Nº | Horário -->
-                <th class="th-vazio" style="width:18px;"></th>
-                <th class="th-vazio" style="width:20px;"></th>
-                <th class="th-vazio" style="width:36px;"></th>
+                <th class="th-turno-label" style="width:34px;" colspan="3">{{ turno['nome'] }}</th>
                 {% for turma in turmas %}
                     <th class="th-turma">
                         {{ turma['serie'] }}ª {{ turma['nome'] }}<br>
@@ -329,44 +332,33 @@
                 </tr>
                 {% endif %}
 
+                {% set horarios_aula = horarios | rejectattr('eh_intervalo') | list %}
                 {% set ns = namespace(num_aula=0, primeira_linha=True) %}
-                {% set total_linhas = horarios|length %}
 
-                {% for horario in horarios %}
+                {% for horario in horarios_aula %}
                     <tr>
-                        {# Célula do dia só na primeira linha, com rowspan #}
                         {% if ns.primeira_linha %}
                             {% set ns.primeira_linha = False %}
-                            {% if horario['eh_intervalo'] %}
-                                <td rowspan="{{ total_linhas }}" class="td-intervalo-dia">{{ nomes_dias[dia] }}</td>
-                            {% else %}
-                                <td rowspan="{{ total_linhas }}" class="td-dia">{{ nomes_dias[dia] }}</td>
-                            {% endif %}
+                            <td rowspan="{{ horarios_aula|length }}" class="td-dia">{{ nomes_dias[dia] }}</td>
                         {% endif %}
 
-                        {% if horario['eh_intervalo'] %}
-                            <td class="td-intervalo-num">—</td>
-                            <td class="td-intervalo-hora">Intervalo</td>
-                            <td colspan="{{ turmas|length }}" class="celula-intervalo">⏸ INTERVALO</td>
-                        {% else %}
-                            {% set ns.num_aula = ns.num_aula + 1 %}
-                            <td class="td-num">{{ ns.num_aula }}ª</td>
-                            <td class="td-hora">
-                                {{ horario['hora_inicio'] }}<br>
-                                <span style="opacity:0.7;">{{ horario['hora_fim'] }}</span>
-                            </td>
-                            {% for turma in turmas %}
+                        {% set ns.num_aula = ns.num_aula + 1 %}
+                        <td class="td-num">{{ ns.num_aula }}ª</td>
+                        <td class="td-hora">
+                            {{ horario['hora_inicio'] }}<br>
+                            <span style="opacity:0.7;">{{ horario['hora_fim'] }}</span>
+                        </td>
+                        {% for turma in turmas %}
                                 {% set aula = grade.get(horario['id_horario'], {}).get(dia, {}).get(turma['id_turma']) %}
                                 {% if aula %}
                                     <td class="celula" style="background-color:{{ aula['cor'] }};">
                                         <span class="sigla">{{ aula['sigla'] }}</span>
                                         <span class="prof">{{ aula['professor_curto'] }}</span>
                                     </td>
-                                {% else %}
-                                    <td class="vazia"></td>
-                                {% endif %}
-                            {% endfor %}
-                        {% endif %}
+                            {% else %}
+                                <td class="vazia"></td>
+                            {% endif %}
+                        {% endfor %}
                     </tr>
                 {% endfor %}
 
@@ -383,13 +375,6 @@
                 agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
     const el = document.getElementById('rodape');
     if (el) el.textContent = 'Gerado em: ' + fmt;
-
-    const dataRel = "{{ data_rel }}";
-    if (dataRel) {
-        const [y,m,d] = dataRel.split('-');
-        const info = document.getElementById('rel-data-info');
-        if (info) info.textContent = 'Grade Horária — ' + d + '/' + m + '/' + y;
-    }
 
 </script>
 </body>
