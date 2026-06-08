@@ -259,16 +259,33 @@
             {% set _nd = dias|length -%}
             {% set _na = horarios | rejectattr('eh_intervalo') | list | length -%}
             {% set _th = 45 + (_nd - 1) * 5 + _nd * _na * 24 -%}
-            {% set _rz = 620 / _th -%}
+            {% set _rz = 900 / _th -%}
             {% set _pz = [0.4, [_rz, 1.0] | min] | max %}
-            html { zoom: {{ _pz | round(4) }}; }
             .no-print { display: none !important; }
-            /* Margem 2mm: aplicada no @page (Chrome respeita em --print-to-pdf
-               quando precedido por width/height) E também no body como fallback
-               (o zoom encolhe um pouco, mas garante margem visível). */
-            @page { size: 297mm 210mm; margin: 2mm; }
-            html, body { margin: 0 !important; padding: 0 !important; }
-            .relatorio-wrapper { padding: 0 !important; margin: 0 !important; }
+            /* Margem 2mm garantida: zoom aplicado apenas no wrapper (não no html),
+               body com padding 2mm fixo. Como o padding fica FORA do escalonamento,
+               renderiza nos exatos 2mm físicos. */
+            @page { size: 297mm 210mm; margin: 0; }
+            html { margin: 0 !important; padding: 0 !important; }
+            body {
+                margin: 0 !important;
+                padding: 2mm !important;
+                box-sizing: border-box !important;
+                width: 297mm !important;
+                height: 210mm !important;
+            }
+            .relatorio-wrapper {
+                padding: 0 !important;
+                margin: 0 !important;
+                zoom: {{ _pz | round(4) }};
+                width: {{ (293 / _pz) | round(2) }}mm !important;
+                height: {{ (206 / _pz) | round(2) }}mm !important;
+                overflow: hidden !important;
+            }
+            .relatorio-wrapper table {
+                height: 100% !important;
+                width: 100% !important;
+            }
             body { font-size: 11px; }
             table { font-size: 10px; }
             th, td { padding: 0 1px !important; }
