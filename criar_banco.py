@@ -154,18 +154,27 @@ for comando in comandos_sql:
 
 cursor.execute("SELECT COUNT(*) AS total FROM usuario")
 if cursor.fetchone()['total'] == 0:
-    seeds = [
-        ('Diretor', 'diretor@escola.com', generate_password_hash('diretor123'), 'diretor', None),
-        ('Secretaria', 'secretaria@escola.com', generate_password_hash('secretaria123'), 'secretaria', None),
-    ]
-    cursor.executemany("""
-        INSERT INTO usuario (nome, email, senha_hash, perfil, id_professor, primeiro_login)
-        VALUES (%s, %s, %s, %s, %s, 0)
-    """, seeds)
-    print("\nUsuários padrão criados:")
-    print("  diretor@escola.com    / diretor123")
-    print("  secretaria@escola.com / secretaria123")
-    print("IMPORTANTE: Troque as senhas após o primeiro login!\n")
+    seed_default = os.environ.get('DB_SEED_DEFAULT_USERS', '').lower() in ('1', 'true', 'yes')
+    if seed_default:
+        seeds = [
+            ('Diretor', 'diretor@escola.com', generate_password_hash('diretor123'), 'diretor', None),
+            ('Secretaria', 'secretaria@escola.com', generate_password_hash('secretaria123'), 'secretaria', None),
+        ]
+        cursor.executemany("""
+            INSERT INTO usuario (nome, email, senha_hash, perfil, id_professor, primeiro_login)
+            VALUES (%s, %s, %s, %s, %s, 1)
+        """, seeds)
+        print("\n[AVISO] Usuarios padrao criados (somente para desenvolvimento):")
+        print("  diretor@escola.com    / diretor123")
+        print("  secretaria@escola.com / secretaria123")
+        print("  TROQUE AS SENHAS no primeiro login (primeiro_login=1 forca redirecionamento).\n")
+    else:
+        print("\n[INFO] Nenhum usuario criado.")
+        print("  Para popular usuários default em DEV: DB_SEED_DEFAULT_USERS=true python criar_banco.py")
+        print("  Em PRODUÇÃO: crie o primeiro diretor via INSERT manual:")
+        print("    INSERT INTO usuario (nome, email, senha_hash, perfil, primeiro_login)")
+        print("    VALUES ('Seu Nome', 'voce@dominio.com', '<hash gerado>', 'diretor', 1);")
+        print("  (gere o hash com: python -c \"from werkzeug.security import generate_password_hash; print(generate_password_hash('SUA_SENHA'))\")\n")
 
 conn.commit()
 conn.close()
