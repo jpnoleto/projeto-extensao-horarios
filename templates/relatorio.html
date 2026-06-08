@@ -194,8 +194,8 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .celula .sigla { display: block; font-size: 13px; font-weight: 900; letter-spacing: 0.2px; }
-        .celula .prof  { display: block; font-size: 11px; font-weight: 500; margin-top: 1px; opacity: 1; }
+        .celula .sigla { display: block; font-size: 13px; font-weight: 900; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .celula .prof  { display: block; font-size: 11px; font-weight: 500; margin-top: 1px; opacity: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* Célula vazia */
         .vazia { background: #fafafa; height: 28px; }
@@ -289,21 +289,42 @@
             body { font-size: 11px; }
             table { font-size: 10px; }
             th, td { padding: 0 1px !important; }
-            col.col-dia  { width: 8px !important; }
-            col.col-num  { width: 8px !important; }
-            col.col-hora { width: 18px !important; }
-            .celula, .vazia { height: 23px !important; padding: 0 !important; overflow: hidden; line-height: 1.0 !important; }
-            .celula .sigla { font-size: 12px !important; font-weight: 900 !important; line-height: 1.0 !important; letter-spacing: 0.2px !important; }
-            .celula .prof  { font-size: 10px !important; font-weight: 500 !important; line-height: 1.0 !important; margin-top: 0 !important; opacity: 1 !important; }
             col.col-dia  { width: 12px !important; }
             col.col-num  { width: 14px !important; }
             col.col-hora { width: 30px !important; }
-            .th-turno-label { font-size: 6.5px !important; padding: 2px 2px !important; letter-spacing: 0.6px !important; border-bottom-width: 1px !important; }
-            .th-turma { height: 22px !important; font-size: 12px !important; line-height: 1 !important; padding: 1px !important; }
+            /* Proteção contra wrap: garante que o conteúdo das células de
+               disciplina, professor e turma NUNCA quebra em 2+ linhas
+               mesmo quando o número de turmas aumenta (colunas estreitas).
+               Texto longo é truncado com ellipsis em vez de aumentar a
+               altura da linha — sem isso, mais turmas = colunas estreitas
+               = wrap = células mais altas = overflow para 2 páginas. */
+            .celula, .vazia { height: 23px !important; padding: 0 !important; overflow: hidden; line-height: 1.0 !important; }
+            .celula .sigla {
+                font-size: 12px !important; font-weight: 900 !important;
+                line-height: 1.0 !important; letter-spacing: 0.2px !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+            .celula .prof  {
+                font-size: 10px !important; font-weight: 500 !important;
+                line-height: 1.0 !important; margin-top: 0 !important;
+                opacity: 1 !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+            .th-turno-label { font-size: 6.5px !important; padding: 2px 2px !important; letter-spacing: 0.6px !important; border-bottom-width: 1px !important; white-space: nowrap !important; }
+            .th-turma {
+                height: 22px !important; font-size: 12px !important;
+                line-height: 1 !important; padding: 1px !important;
+                overflow: hidden !important;
+                white-space: nowrap !important;
+            }
             .th-turma span { font-size: 8px !important; }
-            .td-hora { font-size: 9px !important; height: 23px !important; padding: 0 1px !important; overflow: hidden; line-height: 1.1 !important; }
+            .td-hora { font-size: 9px !important; height: 23px !important; padding: 0 1px !important; overflow: hidden; line-height: 1.1 !important; white-space: nowrap !important; }
             .td-dia  { font-size: 8px !important; padding: 2px 0 !important; letter-spacing: 0 !important; }
-            .td-num  { font-size: 8.5px !important; padding: 0 !important; }
+            .td-num  { font-size: 8.5px !important; padding: 0 !important; white-space: nowrap !important; }
             .tr-separador td { height: 5px !important; }
         }
 
