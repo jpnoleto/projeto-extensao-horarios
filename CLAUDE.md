@@ -151,15 +151,15 @@ Design system baseado no projeto Stitch "Gestor de Horários Pro". Fundo claro, 
 
 **Exceções que mantêm estilo próprio:**
 - `login.html`: fundo escuro estrelado (campo estelar) para contraste com o card branco
-- `relatorio.html`: standalone de impressão com header crimson (branding da escola)
+- `relatorio.html`: standalone de impressão sem header — turno aparece como label discreta no canto superior-esquerdo da tabela (`.th-turno-label` com `colspan=3` cobrindo as colunas de dia/número/horário)
 - `meu_horario.html`: standalone com tema claro próprio
 
-Logo da escola: `static/img/logo.png` — exibida no header do `base.html` e no cabeçalho do `relatorio.html`.
+Logo da escola: `static/img/logo.png` — exibida no header do `base.html` (o relatório de impressão não usa mais a logo para otimizar espaço vertical).
 
 Paleta do relatório de impressão (cores da logo):
-- Crimson escuro `#7B1818` → `--crim` (header, coluna dia, separadores)
+- Crimson escuro `#7B1818` → `--crim` (label do turno, coluna dia, separadores entre dias)
 - Crimson médio `#9B2020` → `--crim2` (cabeçalho de turmas)
-- Laranja `#C8601A` → `--laranja` (badge de turno, bordas de intervalo)
+- Laranja `#C8601A` → `--laranja` (bordas da coluna do dia, filete nos separadores)
 
 ### Dashboard (index.html)
 
@@ -424,14 +424,37 @@ Implementada em `professores` e `disciplinas`: 20 itens por página, via `?pagin
 
 ## Relatório de Grade Horária — Layout Visual
 
-O relatório (`templates/relatorio.html`) usa layout de impressão com fundo branco e células coloridas por disciplina.
+O relatório (`templates/relatorio.html`) usa layout de impressão otimizado para uma única página A4 landscape, com fundo branco e células coloridas por disciplina.
 
-- Tela de seleção (`selecionar_turno_relatorio.html`) tem campos opcionais: **nome da escola** e **data do relatório** — enviados via GET para a rota do relatório
+**Estrutura:**
+
+- `relatorio.html` é standalone (não herda `base.html`), `@page size: 297mm 210mm`
+- **Sem header com logo** (otimização de espaço vertical) — turno aparece como label discreta no canto superior-esquerdo via `<th colspan="3" class="th-turno-label">`
+- **Linhas de intervalo removidas** — filtradas via `{% set horarios_aula = horarios | rejectattr('eh_intervalo') | list %}`; só horários de aula são renderizados
+- **Separador entre dias** com 5px de altura (`.tr-separador`), crimson com filete laranja via box-shadow
+- Células mostram `sigla` (12px bold) + `professor_curto` (10px) com `background-color` da disciplina
+- `print-color-adjust: exact` garante que as cores aparecem ao imprimir/salvar PDF
+
+**Margem 2mm uniforme em todos os lados:**
+
+- `@page margin: 0` (Chrome headless ignora @page margin de forma confiável)
+- `body { padding: 2mm; width: 297mm; height: 210mm; box-sizing: border-box }` — padding fixo FORA do escalonamento
+- Zoom aplicado apenas no `.relatorio-wrapper` (não no `html`), com largura/altura infladas (`293/zoom mm` e `206/zoom mm`) para preencher a área útil após o escalonamento
+- `.relatorio-wrapper table { height: 100%; width: 100% }` — tabela estica para preencher o wrapper, eliminando espaço vazio no rodapé
+
+**Garantia de 1 página independente do número de turmas:**
+
+- Fórmula Jinja `_th = 45 + (_nd - 1) * 5 + _nd * _na * 24` calcula altura estimada usando dias e aulas (NÃO turmas)
+- `_rz = 900 / _th` capado em 1.0 → zoom adapta dinamicamente
+- `white-space: nowrap + text-overflow: ellipsis` em `.sigla`, `.prof`, `.th-turma`, `.th-turno-label`, `.td-hora`, `.td-num` — previne wrap em colunas estreitas (que causaria células altas e overflow para 2 páginas)
+- `table-layout: fixed` + `<colgroup>` com `col.col-dia` (12px), `col.col-num` (14px), `col.col-hora` (30px) — as N colunas de turma dividem o restante automaticamente
+- Testado com 5, 13, 20 e 30 turmas — todos resultam em 1 página
+
+**Tela de seleção e parâmetros (preservados):**
+
+- `selecionar_turno_relatorio.html` tem campos opcionais: **nome da escola** e **data do relatório** — enviados via GET para a rota
 - Parâmetros `nome_escola` e `data_rel` são query strings em `/relatorio_horario_turno/<id_turno>`
 - `_montar_dados_relatorio` inclui `professor_curto` (primeiro nome) além de `professor` (nome completo)
-- `relatorio.html` é standalone (não herda `base.html`), fundo branco, `@page A4 landscape`
-- Células mostram `sigla` (linha 1) + `professor_curto` (linha 2) com `background-color` da disciplina
-- `print-color-adjust: exact` garante que as cores aparecem ao imprimir/salvar PDF
 
 ## Sugestões de Alocação
 
