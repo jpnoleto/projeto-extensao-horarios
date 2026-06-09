@@ -12,7 +12,7 @@
 | **Autor** | João Pedro Noleto da Silva |
 | **Instituição** | Unopar - Anhanguera |
 | **Curso** | Engenharia de Software |
-| **Disciplina / Atividade de Extensão** | Projeto de Extenção |
+| **Disciplina / Atividade de Extensão** | Projeto de Extensão |
 | **Orientador(a)** | Unopar |
 | **Período** | 2° Período |
 | **Repositório** | <https://github.com/Noletinho/projeto-extensao-horarios> |
