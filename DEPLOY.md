@@ -16,134 +16,124 @@ Antes de fazer qualquer deploy, certifique-se:
 
 ## Plataformas Recomendadas
 
-### PythonAnywhere (grátis para sempre — recomendado)
+### Render + freedb.tech (grátis para sempre — recomendado)
 
-PythonAnywhere é o melhor para projetos de escola: MySQL incluso, não dorme, e é feito para Flask.
+Combinação ideal para projetos de extensão com **uso esporádico**: Render hospeda o app Flask grátis e freedb.tech fornece um MySQL grátis (200 MB). Sem cartão de crédito em nenhum dos dois.
 
-**Passo a passo:**
+**Observação:** O Render Free Web Service **dorme após 15 minutos** sem requisições e demora ~30s para acordar. Para uso ocasional (apresentação à banca, demonstrações pontuais) isso é irrelevante.
 
-1. **Crie conta grátis** em <https://www.pythonanywhere.com/registration/register/beginner/>
-   - Escolha um username (vai virar parte da URL: `seuuser.pythonanywhere.com`)
+#### Parte 1 — Criar o banco MySQL no freedb.tech (~5 min)
 
-2. **Crie o banco MySQL** (aba **Databases**):
-   - Defina uma senha forte para o usuário MySQL
-   - Crie o banco: nome `seuuser$escola` (o prefixo `seuuser$` é obrigatório)
-   - **Anote os dados** que aparecem:
-     - Host: `seuuser.mysql.pythonanywhere-services.com`
-     - User: `seuuser`
-     - Banco: `seuuser$escola`
+1. Acesse <https://freedb.tech/> → **Sign Up** (só email + senha, sem cartão)
+2. Confirme o email
+3. No painel → **Create New Database**
+4. Anote os dados que aparecem:
 
-3. **Clone o repositório** (aba **Consoles → Bash**):
-   ```bash
-   git clone https://github.com/Noletinho/projeto-extensao-horarios.git
-   cd projeto-extensao-horarios
-   ```
+   | Campo | Exemplo |
+   |---|---|
+   | Host | `sql.freedb.tech` |
+   | Port | `3306` |
+   | User | `freedb_seuuser` |
+   | Password | (a que você definiu) |
+   | Database name | `freedb_escola` |
 
-4. **Crie o virtualenv** e instale dependências:
-   ```bash
-   mkvirtualenv --python=python3.10 mvenv
-   pip install -r requirements.txt
-   ```
+#### Parte 2 — Criar conta no Render (~3 min)
 
-5. **Crie o `.env`** no diretório do projeto:
-   ```bash
-   nano .env
-   ```
-   Cole (substitua `seuuser` e `SUASENHA` pelos seus valores):
+1. Acesse <https://render.com> → **Get Started** (login com GitHub é o mais simples)
+2. Autorize o Render a acessar seu repositório `Noletinho/projeto-extensao-horarios`
 
-   ```ini
-   DATABASE_URL=mysql://seuuser:SUASENHA@seuuser.mysql.pythonanywhere-services.com:3306/seuuser$escola
-   SECRET_KEY=cole-aqui-32-bytes-aleatorios
-   FLASK_DEBUG=0
-   ```
-   Gere a `SECRET_KEY` com: `python -c "import secrets; print(secrets.token_hex(32))"`
+#### Parte 3 — Deploy do Web Service (~10 min)
 
-6. **Crie o schema do banco**:
+1. No dashboard do Render → **New + → Web Service**
+2. Selecione o repositório `projeto-extensao-horarios` → **Connect**
+3. Configure:
+
+   | Campo | Valor |
+   |---|---|
+   | Name | `projeto-extensao-horarios` (ou outro) |
+   | Region | `Oregon (US West)` (mais rápido pro freedb.tech) |
+   | Branch | `master` |
+   | Runtime | `Python 3` |
+   | Build Command | `pip install -r requirements.txt` |
+   | Start Command | (deixe vazio — vem do `Procfile`) |
+   | Instance Type | **Free** |
+
+4. Em **Environment Variables** clique **Add Environment Variable** e adicione:
+
+   | Key | Value |
+   |---|---|
+   | `DATABASE_URL` | `mysql://freedb_seuuser:SUASENHA@sql.freedb.tech:3306/freedb_escola` |
+   | `SECRET_KEY` | (gere com `python -c "import secrets; print(secrets.token_hex(32))"`) |
+   | `FLASK_DEBUG` | `0` |
+   | `PYTHON_VERSION` | `3.11.9` |
+
+5. Clique **Create Web Service** → o Render começa o primeiro build (~3 min)
+
+#### Parte 4 — Inicializar o banco e criar diretor (~5 min)
+
+1. Quando o deploy terminar, no dashboard do serviço → aba **Shell** (à esquerda)
+2. Rode:
+
    ```bash
    python criar_banco.py
    ```
 
-7. **Crie seu usuário diretor** (gere o hash da senha primeiro):
+   Isso cria o schema no MySQL do freedb.tech (sem usuários default — `DB_SEED_DEFAULT_USERS` está off).
+
+3. Gere o hash da senha do diretor:
+
    ```bash
    python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('SUA_SENHA_FORTE'))"
    ```
-   Copie o hash gerado. Abra a aba **Databases → Consoles → Start a console** e rode:
-   ```sql
-   USE seuuser$escola;
-   INSERT INTO usuario (nome, email, senha_hash, perfil, primeiro_login)
-   VALUES ('Seu Nome', 'voce@dominio.com', '<hash_copiado>', 'diretor', 1);
+
+   Copie o hash inteiro (começa com `pbkdf2:sha256:...` ou `scrypt:...`).
+
+4. Ainda no shell do Render, conecte no MySQL:
+
+   ```bash
+   python -c "
+   from db import conectar
+   with conectar() as c:
+       cur = c.cursor()
+       cur.execute('INSERT INTO usuario (nome, email, senha_hash, perfil, primeiro_login) VALUES (%s, %s, %s, %s, %s)',
+                   ('Seu Nome', 'voce@dominio.com', 'COLE_O_HASH_AQUI', 'diretor', 1))
+       c.commit()
+       print('OK')
+   "
    ```
 
-8. **Configure o web app** (aba **Web**):
-   - **Add a new web app**
-   - Escolha **Manual configuration** (NÃO use "Flask quickstart")
-   - Selecione **Python 3.10**
-   - Na seção **Code**:
-     - **Source code**: `/home/seuuser/projeto-extensao-horarios`
-     - **Working directory**: `/home/seuuser/projeto-extensao-horarios`
-     - **WSGI configuration file**: clique no link e substitua todo o conteúdo por:
+5. Acesse a URL fornecida (algo como `https://projeto-extensao-horarios.onrender.com`) → login com email/senha do diretor criado.
 
-       ```python
-       import sys
-       sys.path.insert(0, '/home/seuuser/projeto-extensao-horarios')
-       from dotenv import load_dotenv
-       load_dotenv('/home/seuuser/projeto-extensao-horarios/.env')
-       from rotas import app as application
-       ```
-   - Na seção **Virtualenv**: cole `/home/seuuser/.virtualenvs/mvenv`
-   - Na seção **Static files**:
-     - URL: `/static/`
-     - Directory: `/home/seuuser/projeto-extensao-horarios/static`
-
-9. **Recarregue** clicando no botão verde **Reload seuuser.pythonanywhere.com**
-
-10. Acesse **<https://seuuser.pythonanywhere.com>** e faça login com o diretor criado
-
-**Para atualizar o código depois:**
+#### Atualizar código depois
 
 ```bash
-cd ~/projeto-extensao-horarios
-git pull
-# se mudou requirements.txt:
-pip install -r requirements.txt
-# Recarregar app via aba Web > botão Reload
+# Localmente:
+git push origin master
 ```
 
-### Railway (não-grátis — ~$5/mês)
+O Render detecta o push e faz redeploy automaticamente (~3 min).
+
+### Alternativas
+
+#### Oracle Cloud Free Tier (forever free, mais poderoso)
+
+Para uso intenso ou portfolio mais robusto: VM ARM com 24 GB RAM **forever free**, MySQL local, sem cold start. Setup ~1h de Linux. Requer cartão para verificação (não cobra).
+
+#### Railway (pago — ~$5/mês de crédito de trial)
 
 1. Crie conta em <https://railway.app>
-2. **New Project → Deploy from GitHub repo** → escolha `Noletinho/projeto-extensao-horarios`
-3. Adicione plugin **MySQL**: **+ New → Database → MySQL**
-4. Configure variáveis de ambiente do app (aba **Variables**):
+2. **New Project → Deploy from GitHub repo** → escolha o repositório
+3. **+ New → Database → MySQL**
+4. Variáveis de ambiente:
 
    | Variável | Valor |
    |---|---|
-   | `DATABASE_URL` | `${{ MySQL.DATABASE_URL }}` (referência automática) |
+   | `DATABASE_URL` | `${{ MySQL.DATABASE_URL }}` |
    | `SECRET_KEY` | (gere com `openssl rand -hex 32`) |
    | `FLASK_DEBUG` | `0` |
 
-5. Após primeiro deploy, abra o **shell do Railway** e rode uma vez:
-   ```bash
-   python criar_banco.py
-   ```
-6. Crie o primeiro usuário diretor via console MySQL do Railway:
-   ```sql
-   INSERT INTO usuario (nome, email, senha_hash, perfil, primeiro_login)
-   VALUES ('Seu Nome', 'voce@dominio.com', '<hash>', 'diretor', 1);
-   ```
-   O hash pode ser gerado localmente:
-   ```bash
-   python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('SUA_SENHA_FORTE'))"
-   ```
-
-### Render
-
-1. Crie conta em <https://render.com>
-2. **New + → Web Service** → conecte o repositório
-3. Build: `pip install -r requirements.txt`
-4. Start: (vem do `Procfile`)
-5. Adicione MySQL externo (PlanetScale free ou Railway DB)
-6. Variáveis de ambiente: mesmas do Railway
+5. Após deploy, no shell: `python criar_banco.py`
+6. Crie o diretor no MySQL console do Railway (mesmo SQL da seção freedb.tech)
 
 ## Variáveis de Ambiente
 

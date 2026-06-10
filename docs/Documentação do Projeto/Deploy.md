@@ -6,37 +6,45 @@ Guia resumido. Versão completa em `DEPLOY.md` (raiz do projeto).
 
 | Plataforma | Custo | MySQL | Cold start | Recomendação |
 |---|---|---|---|---|
-| **PythonAnywhere** | 🟢 Grátis pra sempre | ✅ Incluso (512 MB) | ❌ Sempre online | ⭐ Padrão deste projeto |
-| Render | 🟡 Grátis (web) | ❌ DB externo | ⚠️ Dorme em 15 min | Alternativa |
-| Fly.io | 🟡 Grátis (3 VMs) | ❌ DB externo | ✅ Não dorme | Mais complexo |
-| Railway | ❌ ~$5/mês (sem free tier) | ✅ Plugin | ✅ Não dorme | Pago |
+| **Render + freedb.tech** | 🟢 Grátis pra sempre | ✅ freedb.tech (200 MB externo) | ⚠️ Dorme em 15 min (~30s wakeup) | ⭐ Padrão deste projeto |
+| Oracle Cloud Free | 🟢 Forever free | ✅ Local na VM | ✅ Não dorme | Setup Linux ~1h |
+| PythonAnywhere | 🔴 MySQL agora exige plano pago | — | ✅ Não dorme | Não recomendado |
+| Railway | 🔴 ~$5/mês (sem free tier) | ✅ Plugin | ✅ Não dorme | Pago |
 
-## PythonAnywhere (recomendado)
+## Render + freedb.tech (recomendado)
 
-1. Criar conta em <https://www.pythonanywhere.com>
-2. **Databases** → criar MySQL `seuuser$escola` com senha forte
-3. **Consoles → Bash**:
-   ```bash
-   git clone https://github.com/Noletinho/projeto-extensao-horarios.git
-   cd projeto-extensao-horarios
-   mkvirtualenv --python=python3.10 mvenv
-   pip install -r requirements.txt
-   ```
-4. Criar `.env` no projeto:
+Hospedagem em duas camadas, ambas gratuitas:
+
+- **freedb.tech** — banco MySQL gratuito (200 MB, sem cartão)
+- **Render Web Service Free** — aplicação Flask (dorme após 15 min ociosa; perfeito para uso esporádico)
+
+### Passo a passo resumido
+
+1. **freedb.tech** → criar conta → **Create New Database** → anotar host/user/pass/dbname
+2. **Render** → login com GitHub → **New + → Web Service** → conectar `Noletinho/projeto-extensao-horarios`
+3. Configurar:
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: (vazio — vem do `Procfile`)
+   - Instance Type: **Free**
+4. Adicionar Environment Variables:
    ```ini
-   DATABASE_URL=mysql://seuuser:SENHA@seuuser.mysql.pythonanywhere-services.com:3306/seuuser$escola
+   DATABASE_URL=mysql://freedb_user:senha@sql.freedb.tech:3306/freedb_escola
    SECRET_KEY=<gere com python -c "import secrets; print(secrets.token_hex(32))">
    FLASK_DEBUG=0
+   PYTHON_VERSION=3.11.9
    ```
-5. `python criar_banco.py` (cria schema sem usuários default)
-6. Inserir usuário diretor manualmente (instruções no `DEPLOY.md`)
-7. **Web → Add a new web app → Manual configuration → Python 3.10**, configurar paths conforme `DEPLOY.md`
-8. Botão verde **Reload**
+5. **Create Web Service** → após deploy, no Shell do Render:
+   ```bash
+   python criar_banco.py
+   # depois insira o usuário diretor (passos completos em DEPLOY.md)
+   ```
+
+Detalhe completo + criação do diretor em [`DEPLOY.md`](../../DEPLOY.md) na raiz do projeto.
 
 ## Entrypoints
 
-- `wsgi.py` — usado pelo PythonAnywhere (uWSGI procura `application`)
-- `Procfile` (`web: gunicorn rotas:app --workers 2 --timeout 120 ...`) — usado por Railway/Render
+- `Procfile` (`web: gunicorn rotas:app --workers 2 --timeout 120 ...`) — usado por Render/Railway
+- `wsgi.py` — entrypoint WSGI alternativo (usado caso o deploy seja em servidores que procuram `application`)
 
 Os dois coexistem sem conflito; cada plataforma usa o que precisa.
 

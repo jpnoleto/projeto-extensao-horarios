@@ -524,12 +524,34 @@ O formulário `cadastro_alocacao.html` usa uma grade visual interativa gerada po
 - Template standalone `templates/meu_horario.html` (não herda `base.html`), com botão imprimir
 - Link "Meu Horário" adicionado na nav do `base.html` para perfil professor
 
-## Deploy (Railway)
+## Deploy (Render + freedb.tech — recomendado, gratuito)
 
-1. Criar projeto no Railway e adicionar plugin MySQL
-2. Definir variáveis de ambiente: `DATABASE_URL` (auto-preenchida pelo Railway), `SECRET_KEY`
-3. Deploy via GitHub — Railway detecta `Procfile` automaticamente
-4. Após deploy, rodar `python criar_banco.py` uma vez no terminal do Railway para criar o schema
+Combinação truly-free para uso esporádico: Render hospeda o app Flask gratuitamente (Web Service Free, dorme após 15min ociosa) e freedb.tech fornece MySQL gratuito (200 MB).
+
+**Passo a passo resumido (detalhes em `DEPLOY.md`):**
+
+1. **freedb.tech** → criar conta (só email, sem cartão) → **Create New Database** → anotar host (`sql.freedb.tech`), user (`freedb_xxx`), senha, dbname (`freedb_xxx`)
+2. **Render** → login com GitHub → **New + → Web Service** → conectar `Noletinho/projeto-extensao-horarios`
+3. Configurar: Build Command `pip install -r requirements.txt`, Start Command vazio (vem do `Procfile`), Instance Type **Free**
+4. Environment Variables:
+   - `DATABASE_URL=mysql://freedb_user:senha@sql.freedb.tech:3306/freedb_xxx`
+   - `SECRET_KEY=<32 bytes random>`
+   - `FLASK_DEBUG=0`
+   - `PYTHON_VERSION=3.11.9`
+5. Create Web Service → aguardar build → abrir Shell do Render → `python criar_banco.py`
+6. Criar usuário diretor manualmente (SQL via `from db import conectar` no Shell)
+
+**Histórico de plataformas avaliadas:**
+
+- **PythonAnywhere** — descartado: MySQL passou a exigir plano pago durante o desenvolvimento
+- **Railway** — descartado: encerrou plano gratuito permanente, oferece apenas trial credit
+- **Render + freedb.tech** — escolha final, ambos gratuitos forever
+- **Oracle Cloud Free Tier** — alternativa robusta (VM ARM 24GB RAM forever free) para uso intenso, mas requer setup Linux (~1h)
+
+**Entrypoints coexistentes:**
+
+- `Procfile` (`web: gunicorn rotas:app ...`) — usado por Render
+- `wsgi.py` — entrypoint WSGI alternativo (servidores que procuram `application`)
 
 ## Contexto do Projeto
 
