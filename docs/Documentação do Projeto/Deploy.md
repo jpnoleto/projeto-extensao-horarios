@@ -36,7 +36,7 @@ Hospedagem em duas camadas, ambas gratuitas:
 ### Passo a passo resumido
 
 1. **freedb.tech** → criar conta → **Create New Database** → anotar host/user/pass/dbname
-2. **Render** → login com GitHub → **New + → Web Service** → conectar `Noletinho/projeto-extensao-horarios`
+2. **Render** → login com GitHub → **New + → Web Service** → conectar `jpnoleto/projeto-extensao-horarios`
 3. Configurar:
    - Build Command: `pip install -r requirements.txt`
    - Start Command: (vazio — vem do `Procfile`)

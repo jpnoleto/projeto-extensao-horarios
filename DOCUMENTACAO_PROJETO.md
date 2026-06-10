@@ -15,7 +15,7 @@
 | **Disciplina / Atividade de Extensão** | Projeto de Extensão |
 | **Orientador(a)** | Unopar |
 | **Período** | 2° Período |
-| **Repositório** | <https://github.com/Noletinho/projeto-extensao-horarios> |
+| **Repositório** | <https://github.com/jpnoleto/projeto-extensao-horarios> |
 
 ---
 
@@ -212,5 +212,5 @@ Como trabalhos futuros, sugere-se:
 
 ---
 
-**Código-fonte:** <https://github.com/Noletinho/projeto-extensao-horarios>
+**Código-fonte:** <https://github.com/jpnoleto/projeto-extensao-horarios>
 **Demonstração online:** `<PREENCHA: URL do PythonAnywhere após o deploy, ex: https://seuuser.pythonanywhere.com>`

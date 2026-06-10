@@ -49,7 +49,7 @@ Drafts dos campos do "RELATÓRIO FINAL — ENGENHARIA DE SOFTWARE — PROJETO DE
 
 ### Local de realização da atividade extensionista
 
-> Atividade desenvolvida em modalidade híbrida: o sistema foi desenvolvido em ambiente próprio do aluno (Polo `<seu polo>`) e apresentado presencialmente, em demonstração assistida, à equipe gestora da `<nome da escola pública parceira>`, localizada em `<cidade/UF>`. O código-fonte completo, junto com a documentação de instalação, foi publicado em <https://github.com/Noletinho/projeto-extensao-horarios> sob licença aberta, garantindo que a escola parceira — bem como qualquer outra instituição interessada — possa instalar e operar o sistema em sua própria infraestrutura, sem custos.
+> Atividade desenvolvida em modalidade híbrida: o sistema foi desenvolvido em ambiente próprio do aluno (Polo `<seu polo>`) e apresentado presencialmente, em demonstração assistida, à equipe gestora da `<nome da escola pública parceira>`, localizada em `<cidade/UF>`. O código-fonte completo, junto com a documentação de instalação, foi publicado em <https://github.com/jpnoleto/projeto-extensao-horarios> sob licença aberta, garantindo que a escola parceira — bem como qualquer outra instituição interessada — possa instalar e operar o sistema em sua própria infraestrutura, sem custos.
 
 ### Durante a ação
 
@@ -67,7 +67,7 @@ Drafts dos campos do "RELATÓRIO FINAL — ENGENHARIA DE SOFTWARE — PROJETO DE
 >
 > 6. **Hardening de segurança** antes da disponibilização pública: proteção da `SECRET_KEY`, cookies de sessão com `HttpOnly`/`SameSite`/`Secure`, senhas com hash via `werkzeug.security`, controle de acesso por perfis (diretor, secretaria, professor) e remoção das credenciais default do código aberto.
 >
-> 7. **Publicação do código-fonte sob licença aberta** no GitHub (<https://github.com/Noletinho/projeto-extensao-horarios>), com documentação técnica completa (`CLAUDE.md`) e guia de instalação (`DEPLOY.md`), garantindo que a escola parceira ou qualquer outra instituição interessada possa instalar e operar a ferramenta em sua própria infraestrutura, sem custos.
+> 7. **Publicação do código-fonte sob licença aberta** no GitHub (<https://github.com/jpnoleto/projeto-extensao-horarios>), com documentação técnica completa (`CLAUDE.md`) e guia de instalação (`DEPLOY.md`), garantindo que a escola parceira ou qualquer outra instituição interessada possa instalar e operar a ferramenta em sua própria infraestrutura, sem custos.
 >
 > 8. **Apresentação presencial à equipe gestora** da escola parceira — demonstração assistida do sistema em pleno funcionamento, com simulação de cadastros, geração da grade automática, impressão do relatório por turno e acesso individual de professores —, seguida de treinamento básico de uso e coleta de feedback.
 
@@ -86,7 +86,7 @@ Drafts dos campos do "RELATÓRIO FINAL — ENGENHARIA DE SOFTWARE — PROJETO DE
 > - **Permitir que cada professor consulte** sua própria grade individual via login com senha.
 > - **Controlar o acesso** por perfis (diretor, secretaria, professor) com senhas hasheadas e troca obrigatória no primeiro acesso.
 >
-> O código-fonte foi publicado em <https://github.com/Noletinho/projeto-extensao-horarios> sob licença aberta, podendo ser adotado por qualquer outra escola sem custos.
+> O código-fonte foi publicado em <https://github.com/jpnoleto/projeto-extensao-horarios> sob licença aberta, podendo ser adotado por qualquer outra escola sem custos.
 
 ### Conclusão
 
@@ -165,7 +165,7 @@ Sugestão de respostas (marque com **X** no formulário do AVA):
 
 ## Links úteis
 
-- Repositório: <https://github.com/Noletinho/projeto-extensao-horarios>
+- Repositório: <https://github.com/jpnoleto/projeto-extensao-horarios>
 - Documentação técnica completa: `CLAUDE.md` (raiz)
 - Documentação acadêmica: `DOCUMENTACAO_PROJETO.md` (raiz)
 - Guia de deploy: `DEPLOY.md` (raiz)

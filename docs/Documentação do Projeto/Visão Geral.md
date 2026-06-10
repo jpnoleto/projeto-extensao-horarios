@@ -11,7 +11,7 @@ Sistema de gerenciamento de horários escolares desenvolvido como **projeto de e
 | **Curso** | Engenharia de Software |
 | **Atividade** | Projeto de Extensão |
 | **Período** | 2° Período |
-| **Repositório** | <https://github.com/Noletinho/projeto-extensao-horarios> |
+| **Repositório** | <https://github.com/jpnoleto/projeto-extensao-horarios> |
 
 Documento acadêmico completo (resumo, objetivos, metodologia, resultados): **[[../../DOCUMENTACAO_PROJETO|DOCUMENTACAO_PROJETO.md]]** (raiz do projeto).
 

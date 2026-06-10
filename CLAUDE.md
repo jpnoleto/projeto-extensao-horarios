@@ -528,7 +528,7 @@ O formulário `cadastro_alocacao.html` usa uma grade visual interativa gerada po
 
 **Modo padrão: demonstração local + código aberto no GitHub.**
 
-Para o uso previsto (projeto de extensão, apresentação à escola parceira e à banca), **não há necessidade de hospedagem online**. O sistema roda localmente no notebook (`python rotas.py` → <http://127.0.0.1:5000>) e é demonstrado presencialmente. O código-fonte fica publicado em <https://github.com/Noletinho/projeto-extensao-horarios> sob licença aberta, com `DEPLOY.md` documentando instalação para que qualquer escola interessada possa adotá-lo.
+Para o uso previsto (projeto de extensão, apresentação à escola parceira e à banca), **não há necessidade de hospedagem online**. O sistema roda localmente no notebook (`python rotas.py` → <http://127.0.0.1:5000>) e é demonstrado presencialmente. O código-fonte fica publicado em <https://github.com/jpnoleto/projeto-extensao-horarios> sob licença aberta, com `DEPLOY.md` documentando instalação para que qualquer escola interessada possa adotá-lo.
 
 **Por que não hospedar online por default:** durante o desenvolvimento, sucessivas plataformas mudaram suas políticas — Railway encerrou o plano gratuito permanente, PythonAnywhere passou a cobrar pelo MySQL e freedb.tech auto-exclui o banco após 24h ociosas. Manter o discurso de "demonstração local + open source" elimina dependência de provedor externo e preserva a confiabilidade da entrega.
 

@@ -16,7 +16,7 @@ Roteiro para rodar no próprio notebook e demonstrar à escola:
 2. **Clonar o repositório**:
 
    ```bash
-   git clone https://github.com/Noletinho/projeto-extensao-horarios.git
+   git clone https://github.com/jpnoleto/projeto-extensao-horarios.git
    cd projeto-extensao-horarios
    pip install -r requirements.txt
    ```
@@ -102,7 +102,7 @@ Combinação simples mas com pegadinha: Render hospeda o app Flask grátis (~30s
 #### Parte 2 — Criar conta no Render (~3 min)
 
 1. Acesse <https://render.com> → **Get Started** (login com GitHub é o mais simples)
-2. Autorize o Render a acessar seu repositório `Noletinho/projeto-extensao-horarios`
+2. Autorize o Render a acessar seu repositório `jpnoleto/projeto-extensao-horarios`
 
 #### Parte 3 — Deploy do Web Service (~10 min)
 
