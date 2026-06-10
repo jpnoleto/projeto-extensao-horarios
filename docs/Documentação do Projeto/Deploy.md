@@ -2,14 +2,29 @@
 
 Guia resumido. Versão completa em `DEPLOY.md` (raiz do projeto).
 
-## Opções de hospedagem
+## Modo padrão: demonstração local
 
-| Plataforma | Custo | MySQL | Cold start | Recomendação |
-|---|---|---|---|---|
-| **Render + freedb.tech** | 🟢 Grátis pra sempre | ✅ freedb.tech (200 MB externo) | ⚠️ Dorme em 15 min (~30s wakeup) | ⭐ Padrão deste projeto |
-| Oracle Cloud Free | 🟢 Forever free | ✅ Local na VM | ✅ Não dorme | Setup Linux ~1h |
-| PythonAnywhere | 🔴 MySQL agora exige plano pago | — | ✅ Não dorme | Não recomendado |
-| Railway | 🔴 ~$5/mês (sem free tier) | ✅ Plugin | ✅ Não dorme | Pago |
+Para a entrega acadêmica (apresentação à escola parceira + banca), **não é necessário** hospedar online. Basta rodar localmente:
+
+```bash
+pip install -r requirements.txt
+python criar_banco.py   # primeira vez
+python rotas.py         # http://127.0.0.1:5000
+```
+
+Demonstra-se presencialmente com o notebook; o código fica publicado em código aberto no GitHub para a escola (ou qualquer outra interessada) instalar quando desejar.
+
+## Hospedagem online (opcional)
+
+Caso a escola decida operar o sistema em produção:
+
+| Plataforma | Status | Observação |
+|---|---|---|
+| **Oracle Cloud Free Tier** | ✅ Forever free | VM ARM 24 GB RAM. MySQL local. Setup Linux ~1h. |
+| **TiDB Cloud Serverless + Render** | ✅ Forever free | TiDB: 5 GB MySQL-compatível. Render Web Service Free. |
+| Render + freedb.tech | ⚠️ DB auto-exclui em 24h ociosas | Só viável com uso diário |
+| PythonAnywhere | ⚠️ MySQL agora exige plano pago | — |
+| Railway | 🔴 Sem free tier permanente | — |
 
 ## Render + freedb.tech (recomendado)
 

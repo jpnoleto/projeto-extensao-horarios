@@ -524,33 +524,31 @@ O formulário `cadastro_alocacao.html` usa uma grade visual interativa gerada po
 - Template standalone `templates/meu_horario.html` (não herda `base.html`), com botão imprimir
 - Link "Meu Horário" adicionado na nav do `base.html` para perfil professor
 
-## Deploy (Render + freedb.tech — recomendado, gratuito)
+## Entrega e Deploy
 
-Combinação truly-free para uso esporádico: Render hospeda o app Flask gratuitamente (Web Service Free, dorme após 15min ociosa) e freedb.tech fornece MySQL gratuito (200 MB).
+**Modo padrão: demonstração local + código aberto no GitHub.**
 
-**Passo a passo resumido (detalhes em `DEPLOY.md`):**
+Para o uso previsto (projeto de extensão, apresentação à escola parceira e à banca), **não há necessidade de hospedagem online**. O sistema roda localmente no notebook (`python rotas.py` → <http://127.0.0.1:5000>) e é demonstrado presencialmente. O código-fonte fica publicado em <https://github.com/Noletinho/projeto-extensao-horarios> sob licença aberta, com `DEPLOY.md` documentando instalação para que qualquer escola interessada possa adotá-lo.
 
-1. **freedb.tech** → criar conta (só email, sem cartão) → **Create New Database** → anotar host (`sql.freedb.tech`), user (`freedb_xxx`), senha, dbname (`freedb_xxx`)
-2. **Render** → login com GitHub → **New + → Web Service** → conectar `Noletinho/projeto-extensao-horarios`
-3. Configurar: Build Command `pip install -r requirements.txt`, Start Command vazio (vem do `Procfile`), Instance Type **Free**
-4. Environment Variables:
-   - `DATABASE_URL=mysql://freedb_user:senha@sql.freedb.tech:3306/freedb_xxx`
-   - `SECRET_KEY=<32 bytes random>`
-   - `FLASK_DEBUG=0`
-   - `PYTHON_VERSION=3.11.9`
-5. Create Web Service → aguardar build → abrir Shell do Render → `python criar_banco.py`
-6. Criar usuário diretor manualmente (SQL via `from db import conectar` no Shell)
+**Por que não hospedar online por default:** durante o desenvolvimento, sucessivas plataformas mudaram suas políticas — Railway encerrou o plano gratuito permanente, PythonAnywhere passou a cobrar pelo MySQL e freedb.tech auto-exclui o banco após 24h ociosas. Manter o discurso de "demonstração local + open source" elimina dependência de provedor externo e preserva a confiabilidade da entrega.
 
-**Histórico de plataformas avaliadas:**
+### Hospedagem online (opcional, para uso permanente pela escola)
 
-- **PythonAnywhere** — descartado: MySQL passou a exigir plano pago durante o desenvolvimento
-- **Railway** — descartado: encerrou plano gratuito permanente, oferece apenas trial credit
-- **Render + freedb.tech** — escolha final, ambos gratuitos forever
-- **Oracle Cloud Free Tier** — alternativa robusta (VM ARM 24GB RAM forever free) para uso intenso, mas requer setup Linux (~1h)
+Caso a escola decida operar o sistema em produção, opções avaliadas:
+
+| Plataforma | Status | Observação |
+|---|---|---|
+| **Oracle Cloud Free Tier** | ✅ Forever free | VM ARM 24 GB RAM. MySQL local. Setup Linux ~1h. Cartão pra verificação. |
+| **TiDB Cloud Serverless + Render** | ✅ Forever free | TiDB: 5 GB MySQL-compatível. Render Free hospeda Flask (dorme após 15 min). Cartão pra verificação. |
+| Render + freedb.tech | ⚠️ DB auto-exclui em 24h ociosas | Só viável com uso diário |
+| PythonAnywhere | ⚠️ MySQL exige plano pago | Mudou em 2026 |
+| Railway | 🔴 Sem free tier permanente | Crédito de avaliação apenas |
+
+Passo a passo detalhado em `DEPLOY.md` na raiz.
 
 **Entrypoints coexistentes:**
 
-- `Procfile` (`web: gunicorn rotas:app ...`) — usado por Render
+- `Procfile` (`web: gunicorn rotas:app ...`) — usado por Render/Railway
 - `wsgi.py` — entrypoint WSGI alternativo (servidores que procuram `application`)
 
 ## Contexto do Projeto

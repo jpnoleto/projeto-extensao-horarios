@@ -1,8 +1,62 @@
-# Deploy em Produção
+# Deploy
 
-Guia para subir o sistema em hospedagem cloud de forma segura.
+Guia de instalação e (opcionalmente) hospedagem do sistema.
 
-## Pré-requisitos de Segurança
+> **Modo padrão deste projeto: demonstração local.**
+>
+> Para o uso previsto — projeto de extensão universitária, apresentação à instituição parceira, demonstração à banca acadêmica — **não é necessário** colocar o sistema em hospedagem online. Basta rodar localmente no notebook (`python rotas.py` → <http://127.0.0.1:5000>) e demonstrar presencialmente.
+>
+> As seções de hospedagem cloud abaixo são **opcionais**, voltadas para o cenário em que a escola parceira (ou qualquer outra instituição que adote o código aberto deste projeto) decida operar o sistema permanentemente em servidor próprio ou cloud público.
+
+## Instalação local (modo padrão)
+
+Roteiro para rodar no próprio notebook e demonstrar à escola:
+
+1. **Instalar Python 3.10+** e **MySQL 8.0+** (XAMPP, MySQL Community ou Docker)
+2. **Clonar o repositório**:
+
+   ```bash
+   git clone https://github.com/Noletinho/projeto-extensao-horarios.git
+   cd projeto-extensao-horarios
+   pip install -r requirements.txt
+   ```
+
+3. **Criar `.env` na raiz**:
+
+   ```ini
+   DATABASE_URL=mysql://root:SUASENHA@localhost:3306/escola_horarios
+   SECRET_KEY=qualquer-string-pra-dev-local
+   FLASK_DEBUG=1
+   DB_SEED_DEFAULT_USERS=true
+   ```
+
+4. **Criar o banco** (apenas na primeira vez):
+
+   ```bash
+   python criar_banco.py
+   ```
+
+   Isso cria o schema e os usuários default:
+   - `diretor@escola.com` / `diretor123`
+   - `secretaria@escola.com` / `secretaria123`
+
+5. **Rodar o servidor**:
+
+   ```bash
+   python rotas.py
+   ```
+
+   Acesse <http://127.0.0.1:5000> → login → demonstre o sistema.
+
+Para a apresentação à escola, recomenda-se popular previamente alguns dados de exemplo (professores, turmas, disciplinas) para que a demonstração da grade automática e do relatório de impressão seja imediata.
+
+---
+
+## Hospedagem online (opcional)
+
+> As seções abaixo só fazem sentido se a escola decidir efetivamente operar o sistema em produção. Para a entrega acadêmica e demonstração à banca, a instalação local acima é suficiente.
+
+### Pré-requisitos de Segurança
 
 Antes de fazer qualquer deploy, certifique-se:
 
@@ -14,13 +68,21 @@ Antes de fazer qualquer deploy, certifique-se:
 - [x] Servidor de produção via `gunicorn` (não o dev server do Flask)
 - [x] Usuários default só se `DB_SEED_DEFAULT_USERS=true` (off em produção)
 
-## Plataformas Recomendadas
+### Plataformas avaliadas
 
-### Render + freedb.tech (grátis para sempre — recomendado)
+> **Atenção:** durante o desenvolvimento deste projeto, várias plataformas com plano gratuito mudaram suas políticas. Verifique sempre a documentação oficial atualizada antes de seguir.
 
-Combinação ideal para projetos de extensão com **uso esporádico**: Render hospeda o app Flask grátis e freedb.tech fornece um MySQL grátis (200 MB). Sem cartão de crédito em nenhum dos dois.
+| Plataforma | Status atual | Observação |
+|---|---|---|
+| **Oracle Cloud Free Tier** | ✅ Forever free | VM ARM 24 GB RAM. MySQL local. Setup Linux ~1h. Cartão de crédito só pra verificação. **Recomendada para uso intenso.** |
+| **TiDB Cloud Serverless + Render** | ✅ Forever free | TiDB: 5 GB MySQL-compatível grátis. Render Web Service Free hospeda o Flask (dorme após 15 min ociosa). Cartão pra verificação no TiDB. |
+| **Render + freedb.tech** | ⚠️ DB auto-exclui em 24h | freedb.tech só é viável se for usado **diariamente**. Inadequado para uso esporádico. |
+| **PythonAnywhere** | ⚠️ MySQL exige plano pago | Antes oferecia MySQL grátis; mudou em 2026. |
+| **Railway** | ⚠️ Sem plano gratuito permanente | Só crédito de avaliação. |
 
-**Observação:** O Render Free Web Service **dorme após 15 minutos** sem requisições e demora ~30s para acordar. Para uso ocasional (apresentação à banca, demonstrações pontuais) isso é irrelevante.
+### Render + freedb.tech (cuidado: DB temporário)
+
+Combinação simples mas com pegadinha: Render hospeda o app Flask grátis (~30s cold start após 15 min ocioso) e freedb.tech fornece MySQL grátis (200 MB), porém **auto-exclui o banco de dados após cerca de 24 horas de inatividade** no plano free. Só funciona se o sistema for usado todos os dias.
 
 #### Parte 1 — Criar o banco MySQL no freedb.tech (~5 min)
 

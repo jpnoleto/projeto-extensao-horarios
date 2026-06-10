@@ -24,7 +24,7 @@ Documento acadêmico completo (resumo, objetivos, metodologia, resultados): **[[
 | Templates | Jinja2 (herdam de `base.html`) |
 | Animações | Motion.dev v11.11.13 (CDN) |
 | Servidor de produção | Gunicorn (WSGI multi-worker) |
-| Hospedagem recomendada | Render.com (Web Service Free) + freedb.tech (MySQL gratuito) |
+| Modo de entrega padrão | Demonstração local + código aberto no GitHub (sem necessidade de hospedagem online) |
 
 ## Como rodar localmente
 
