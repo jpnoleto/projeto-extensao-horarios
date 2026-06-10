@@ -12,3 +12,6 @@ venv/
 .env
 static/img/biblioteca.jpg
 .claude/settings.local.json
+.vscode/
+*.session.sql
+**/.obsidian/
