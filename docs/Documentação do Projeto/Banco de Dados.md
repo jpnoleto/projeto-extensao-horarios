@@ -1,49 +1,45 @@
 # Banco de Dados
 
 Script de criação: `criar_banco.py`
+Reset completo (DROP de todas as tabelas): `limpar_banco.py`
 Banco: **MySQL** — charset `utf8mb4`, engine `InnoDB`
 
 ## Modelo de dependências
 
 ```
-turno → turma
+turma
 disciplina
-professor → professor_disciplina ← disciplina
 professor → disponibilidade_professor ← horario_aula
-(turno + serie) + disciplina → grade_curricular
-grade_curricular + turma + professor + local + horario_aula → alocacao
-sugestao_grade → turno
+turma + disciplina + professor + horario_aula → alocacao
+usuario (login único de admin, isolado)
 ```
 
-Entidades base (sem dependências): `professor`, `disciplina`, `turno`, `local`, `horario_aula`
+Entidades base (sem dependências): `professor`, `disciplina`, `turma`, `horario_aula`.
+
+> **Removidas na reformulação:** `turno`, `local`, `professor_disciplina`, `grade_curricular` e
+> `sugestao_grade`. O turno virou uma **coluna de texto** em `turma`; a associação professor×disciplina
+> passou a ser feita à mão na [[Montagem da Grade]].
 
 ## Tabelas
+
+### usuario
+Login único de administrador.
+
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| id_usuario | INT PK AUTO | |
+| nome | VARCHAR(255) | NOT NULL |
+| email | VARCHAR(255) | UNIQUE, NOT NULL |
+| senha_hash | VARCHAR(512) | `werkzeug.security` |
 
 ### professor
 | Campo | Tipo | Notas |
 |-------|------|-------|
 | id_professor | INT PK AUTO | |
 | nome | VARCHAR(255) | NOT NULL |
-| cpf | VARCHAR(14) | UNIQUE, nullable |
-| email | VARCHAR(255) | |
-| telefone | VARCHAR(20) | |
+| email | VARCHAR(255) | nullable |
+| telefone | VARCHAR(20) | nullable |
 | status | VARCHAR(10) | `'ativo'` \| `'inativo'` |
-
-### turno
-| Campo | Tipo |
-|-------|------|
-| id_turno | INT PK AUTO |
-| nome | VARCHAR(100) UNIQUE NOT NULL |
-
-### turma
-| Campo | Tipo | Notas |
-|-------|------|-------|
-| id_turma | INT PK AUTO | |
-| nome | VARCHAR(100) | |
-| serie | VARCHAR(50) | |
-| id_turno | FK → turno | |
-
-UNIQUE: `(nome, serie, id_turno)`
 
 ### disciplina
 | Campo | Tipo |
@@ -52,21 +48,16 @@ UNIQUE: `(nome, serie, id_turno)`
 | nome | VARCHAR(255) UNIQUE |
 | sigla | VARCHAR(20) UNIQUE |
 | cor | VARCHAR(20) |
-| carga_horaria_semanal | INT |
 
-### professor_disciplina
-Relação N:N entre professor e disciplina.
-PK composta: `(id_professor, id_disciplina)`
+### turma
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| id_turma | INT PK AUTO | |
+| nome | VARCHAR(100) | ex: `'1A'` |
+| serie | VARCHAR(50) | ex: `'1º Ano'` |
+| turno | VARCHAR(20) | texto: `Matutino` \| `Vespertino` \| `Noturno` |
 
-### local
-> ⚠️ Palavra reservada MySQL — usar backticks em toda query: `` `local` ``
-
-| Campo | Tipo |
-|-------|------|
-| id_local | INT PK AUTO |
-| nome | VARCHAR(255) UNIQUE |
-| tipo | VARCHAR(50) |
-| status | `'ativo'` \| `'inativo'` |
+UNIQUE: `(nome, serie, turno)`
 
 ### horario_aula
 | Campo | Tipo | Notas |
@@ -77,7 +68,7 @@ PK composta: `(id_professor, id_disciplina)`
 | eh_intervalo | INT | `0` = aula, `1` = intervalo |
 
 UNIQUE: `(hora_inicio, hora_fim)`
-> Intervalos aparecem no relatório como linha spanning; **não** aparecem no select de alocação.
+> Intervalos aparecem no relatório como linha spanning; **não** entram na montagem da grade.
 
 ### disponibilidade_professor
 | Campo | Tipo |
@@ -90,45 +81,23 @@ UNIQUE: `(hora_inicio, hora_fim)`
 
 UNIQUE: `(id_professor, dia_semana, id_horario)`
 
-### grade_curricular
-Compartilhada por turno + série — sem duplicação por turma.
-
-| Campo | Tipo |
-|-------|------|
-| id_grade | INT PK AUTO |
-| id_turno | FK → turno |
-| serie | VARCHAR(50) |
-| id_disciplina | FK → disciplina |
-| aulas_semanais | INT |
-
-UNIQUE: `(id_turno, serie, id_disciplina)`
-
 ### alocacao
+Cada linha = uma aula de uma turma num dia/horário.
+
 | Campo | Tipo |
 |-------|------|
 | id_alocacao | INT PK AUTO |
 | id_turma | FK → turma |
 | id_disciplina | FK → disciplina |
 | id_professor | FK → professor |
-| id_local | FK → local |
 | dia_semana | `'segunda'`…`'sexta'` |
 | id_horario | FK → horario_aula |
 
-Restrições de unicidade (evitam conflito):
-- `(id_professor, dia_semana, id_horario)` — professor em dois lugares
+Restrições de unicidade (evitam conflito físico):
+- `(id_professor, dia_semana, id_horario)` — professor em dois lugares ao mesmo tempo
 - `(id_turma, dia_semana, id_horario)` — turma com duas aulas simultâneas
-- `(id_local, dia_semana, id_horario)` — local ocupado duas vezes
 
-### sugestao_grade
-| Campo | Tipo |
-|-------|------|
-| id_sugestao | INT PK AUTO |
-| id_turno | FK → turno |
-| nome | VARCHAR(100) |
-| dados_json | LONGTEXT |
-| cobertura_pct | INT |
-| nao_alocados | INT |
-| criado_em | TIMESTAMP |
+> Não há mais constraint de local — a coluna `id_local` foi removida.
 
 ## Padrão de acesso
 
@@ -143,4 +112,5 @@ with conectar() as conexao:
 ```
 
 - `COUNT(*)` → sempre com alias: `SELECT COUNT(*) AS total` + `fetchone()['total']`
-- Multi-insert com tolerância a conflito → usar `SAVEPOINT` + `ROLLBACK TO SAVEPOINT`
+- Conflitos de unicidade/FK → capturar `pymysql.IntegrityError` e emitir `flash` amigável
+  (exclusões de professor/disciplina/turma/horário em uso não estouram 500)

@@ -51,10 +51,10 @@ Hospedagem em duas camadas, ambas gratuitas:
 5. **Create Web Service** → após deploy, no Shell do Render:
    ```bash
    python criar_banco.py
-   # depois insira o usuário diretor (passos completos em DEPLOY.md)
+   # depois insira o usuário administrador (INSERT manual com hash gerado)
    ```
 
-Detalhe completo + criação do diretor em [`DEPLOY.md`](../../DEPLOY.md) na raiz do projeto.
+Detalhe completo + criação do admin em [`DEPLOY.md`](../../DEPLOY.md) na raiz do projeto.
 
 ## Entrypoints
 
@@ -76,7 +76,7 @@ Os dois coexistem sem conflito; cada plataforma usa o que precisa.
 
 Não há geração automática de PDF no servidor.
 
-**Fluxo atual:** o relatório (`templates/relatorio.html`) é HTML otimizado para impressão A4 paisagem em uma única página (margem 2mm, fórmula de zoom Jinja2). O usuário usa `Ctrl+P → Salvar como PDF` no navegador.
+**Fluxo atual:** o relatório por turma (`templates/relatorio.html`) é HTML otimizado para impressão A4 paisagem em uma única página (`print-color-adjust: exact` para preservar as cores das disciplinas). O usuário usa `Ctrl+P → Salvar como PDF` no navegador.
 
 WeasyPrint foi descartado — não funciona no Windows sem GTK runtime.
 

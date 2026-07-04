@@ -33,8 +33,7 @@ Fonte: Inter via Google Fonts.
 ## Templates especiais (não herdam base.html)
 
 - `login.html` — fundo escuro estrelado
-- `relatorio.html` — standalone de impressão, header crimson
-- `meu_horario.html` — standalone, tema claro próprio
+- `relatorio.html` — standalone de impressão por turma (A4 paisagem, 1 página)
 
 ## Classes de componentes
 

@@ -5,20 +5,19 @@ Sem Blueprint class → `url_for('nome_funcao')` sem namespace.
 
 ## Lista de módulos
 
-| Módulo | Entidade | Arquivo |
-|--------|----------|---------|
-| `professores.py` | Professor | CRUD + paginação (20/pág) |
-| `disciplinas.py` | Disciplina | CRUD + color picker + paginação |
-| `turnos.py` | Turno | CRUD simples |
-| `turmas.py` | Turma | CRUD |
-| `locais.py` | Local | CRUD |
-| `horarios.py` | Horário de Aula | CRUD + flag intervalo |
-| `professor_disciplina.py` | Professor × Disciplina | Vínculo N:N |
-| `disponibilidade.py` | Disponibilidade + Grade | Grade visual |
-| `grade_curricular.py` | Grade Curricular | Fluxo 2 passos (turno → grade) |
-| `alocacao.py` | Alocação de Aulas | Grade visual interativa |
-| `relatorio.py` | Relatório + Meu Horário | Impressão + view professor |
-| `sugestao.py` | Sugestões + Alocação Auto | Algoritmo greedy |
+| Módulo | Responsabilidade |
+|--------|------------------|
+| `autenticacao.py` | `/` (dashboard com stats), `/login`, `/logout` |
+| `professores.py` | CRUD de professor (nome, email, telefone, status) + paginação (20/pág) |
+| `disciplinas.py` | CRUD de disciplina (nome, sigla, cor) + color picker + paginação |
+| `turmas.py` | CRUD de turma (nome, série, turno como texto) |
+| `horarios.py` | CRUD de horário de aula (com flag intervalo) |
+| `disponibilidade.py` | Disponibilidade do professor (dia × horário) + grade visual |
+| `alocacao.py` | **Montagem manual da grade por turma** — ver [[Montagem da Grade]] |
+| `relatorio.py` | Relatório de horário **por turma** (1 página, impressão) |
+
+> Módulos removidos na reformulação: `turnos.py`, `locais.py`, `professor_disciplina.py`,
+> `grade_curricular.py`, `sugestao.py` e `usuarios.py`.
 
 ## Padrão de rotas CRUD
 
@@ -32,25 +31,24 @@ POST /deletar_<entidade>/<id>     → DELETE
 ```
 
 Erros de validação: `flash(msg, 'erro')` + redirect (nunca `erro=` para template).
+Exclusões de itens em uso capturam `pymysql.IntegrityError` e avisam por `flash`.
 
 ## Fluxos especiais
 
-### Dois passos (seleção de turno antes de listar)
-- `grade_curricular` → `selecionar_turno_grades` → `listar_grade_curricular/<id_turno>`
-- `alocacao` → `selecionar_turno_alocacoes` → `listar_alocacoes_turno/<id_turno>`
-- `relatorio` → `selecionar_turno_relatorio` → `relatorio_horario_turno/<id_turno>`
+### Montagem da grade (`alocacao.py`)
+Fluxo de dois passos, por turma:
+`selecionar_turma_montagem` (`/montar_grade`) → `montar_grade` (`/montar_grade/<id_turma>`).
 
-### Alocação por turma (`alocacao.py`)
-Rota: `GET /alocar_turma/<id_turma>`
+Grid interativo (dias × horários) com modal para escolher disciplina + professor, filtrando
+professores por disponibilidade e ocupação. Detalhes em [[Montagem da Grade]].
 
-O template recebe JSONs para a grade visual:
-- `disponibilidades_json` — disponibilidade do professor selecionado
-- `alocacoes_existentes_json` — slots já ocupados da turma
-- `ocupacao_professor_json` — outros slots do professor
-- `horarios_json`, `locais_json`
+### Relatório por turma (`relatorio.py`)
+`selecionar_turma_relatorio` (`/relatorio`) → `relatorio_turma` (`/relatorio/<id_turma>`).
 
-POST recebe `slots_json`: `[{dia, id_horario, id_local}, ...]`
-Cada slot inserido via SAVEPOINT para tolerar conflito.
+- `_montar_dados_relatorio(id_turma)` monta `grade[id_horario][dia] = {sigla, cor, nome_disciplina, professor_curto}`.
+- Campos opcionais **nome da escola** e **data** via query string.
+- Template `relatorio.html` standalone, A4 paisagem, 1 página, `print-color-adjust: exact`.
 
-### Sugestões + Alocação Automática (`sugestao.py`)
-Ver [[Alocação e Sugestões]].
+### Disponibilidade (`disponibilidade.py`)
+Cadastro por professor (dia × horário) + grade visual consolidada (`grade_disponibilidades`).
+Edição por dia via `editar_disponibilidade_dia`.

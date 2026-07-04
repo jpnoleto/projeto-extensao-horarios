@@ -2,38 +2,32 @@
 
 Arquivo: `auth.py`
 
-## Perfis e permissões
-
-| Funcionalidade | diretor | secretaria | professor |
-|---|---|---|---|
-| Login / logout | ✅ | ✅ | ✅ |
-| Editar próprio perfil | ✅ | ✅ | ✅ |
-| Ver relatório de horários | ✅ | ✅ | ✅ |
-| CRUD de entidades | ✅ | ✅ | ❌ |
-| Gerenciar usuários | ✅ | ❌ | ❌ |
+Login **único de administrador**. Não há mais perfis (diretor/secretaria/professor), gestão de
+usuários, primeiro-login nem máscara de CPF — tudo removido na reformulação.
 
 ## Funções de auth.py
 
 | Função | Descrição |
 |--------|-----------|
-| `usuario_logado()` | Retorna `{id, nome, perfil, id_professor, primeiro_login}` ou `None` |
+| `usuario_logado()` | Retorna `{id, nome}` a partir da sessão, ou `None` |
 | `@requer_login` | Redireciona para `/login` se não autenticado |
-| `@requer_perfil(*perfis)` | Verifica `session['usuario_perfil']` |
+| `requer_perfil(*_)` | **Alias de `requer_login`** — só exige login; mantido para não reescrever decorators |
 
 ## Uso nos blueprints
 
+Todas as rotas exigem apenas login:
+
 ```python
-from auth import requer_perfil
+from auth import requer_login
 
 @app.route('/rota')
-@requer_perfil('diretor', 'secretaria')
+@requer_login
 def view():
     ...
 ```
 
-- Todos os blueprints usam `@requer_perfil('diretor', 'secretaria')`
-- `relatorio.py` usa apenas `@requer_login`
-- `usuarios.py` usa `@requer_perfil('diretor')` em todas as rotas
+Alguns módulos ainda importam `requer_perfil('...')` por herança — como agora é um alias de
+`requer_login`, o efeito é idêntico (só exige estar logado).
 
 ## Context processor (rotas.py)
 
@@ -43,26 +37,26 @@ def injetar_usuario():
     return dict(usuario_atual=auth.usuario_logado())
 ```
 
-`usuario_atual` disponível em todos os templates via `base.html`.
+`usuario_atual` fica disponível em todos os templates via `base.html`.
 
-## Primeiro login
+## Login
 
-Quando `usuario['primeiro_login'] == 1`: redirect automático para `/meu_perfil` após login.
-Ao salvar nova senha, `primeiro_login` é zerado.
+`autenticacao.login()` valida email + senha contra a tabela `usuario` com
+`werkzeug.security.check_password_hash` e grava `usuario_id` / `usuario_nome` na sessão.
+Sem lógica de primeiro-login ou perfil.
 
-## Seeds padrão (criar_banco.py)
+## Seed padrão (criar_banco.py)
 
-Criados apenas se a tabela `usuario` estiver vazia:
+Criado apenas se a tabela `usuario` estiver vazia **e** `DB_SEED_DEFAULT_USERS=true`:
 
-| Email | Senha | Perfil |
-|-------|-------|--------|
-| `diretor@escola.com` | `diretor123` | diretor |
-| `secretaria@escola.com` | `secretaria123` | secretaria |
+| Email | Senha |
+|-------|-------|
+| `admin@escola.com` | `admin123` |
 
-> ⚠️ Trocar as senhas após o primeiro login!
+> ⚠️ Só para desenvolvimento — trocar a senha antes de qualquer uso real. Em produção, criar o admin
+> via INSERT manual com hash gerado por `generate_password_hash`.
 
-## Máscara de CPF
+## Segurança de sessão
 
-- **Diretor**: vê CPF formatado `XXX.XXX.XXX-XX` via filtro Jinja2 `{{ cpf|formatar_cpf }}`
-- **Secretaria**: vê `***.***.***-**`
-- Filtro definido em `rotas.py` com `@app.template_filter`
+Cookies com `HttpOnly`, `SameSite=Lax` e `Secure` (HTTPS-only fora do modo debug). `SECRET_KEY`
+obrigatória em produção (RuntimeError se ausente com `FLASK_DEBUG=0`).
