@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block titulo %}Montar Horário — {{ turma['nome'] }}{% endblock %}
+
+{% set rotulos_dia = {'segunda':'Segunda','terca':'Terça','quarta':'Quarta','quinta':'Quinta','sexta':'Sexta'} %}
+
+{% block estilos_extra %}
+<style>
+.grade-montagem { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.grade-montagem th, .grade-montagem td {
+    border: 1px solid var(--cor-borda); padding: 0; text-align: center; vertical-align: middle;
+}
+.grade-montagem thead th {
+    background: #f1f5f9; color: var(--cor-primaria); font-size: .8rem; text-transform: uppercase;
+    letter-spacing: .5px; padding: 8px 4px;
+}
+.grade-montagem .col-hora {
+    width: 78px; background: var(--cor-superficie-alt); color: var(--cor-texto-claro);
+    font-size: .72rem; line-height: 1.35; padding: 6px 4px; font-weight: 600;
+}
+.celula-grade { height: 62px; position: relative; }
+.aula-preenchida {
+    height: 100%; width: 100%; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 2px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+    padding: 4px 2px;
+}
+.aula-preenchida .sigla { font-weight: 800; font-size: .82rem; line-height: 1; }
+.aula-preenchida .prof { font-size: .68rem; opacity: .95; }
+.btn-remover-aula {
+    position: absolute; top: 2px; right: 3px; background: rgba(0,0,0,0.28); color: #fff;
+    border: none; border-radius: 4px; width: 18px; height: 18px; line-height: 1; cursor: pointer;
+    font-size: .72rem; padding: 0;
+}
+.btn-remover-aula:hover { background: rgba(0,0,0,0.5); }
+.btn-add-aula {
+    height: 100%; width: 100%; background: transparent; border: none; cursor: pointer;
+    color: var(--cor-borda-forte); font-size: 1.1rem; transition: background .12s;
+}
+.btn-add-aula:hover { background: #eff6ff; color: var(--cor-primaria); }
+
+.modal-fundo {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.55); display: none;
+    align-items: center; justify-content: center; z-index: 1000;
+}
+.modal-fundo.aberto { display: flex; }
+.modal-caixa {
+    background: var(--cor-superficie); border-radius: 12px; padding: 22px 24px; width: min(420px, 92vw);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+.modal-titulo { font-size: 1.05rem; font-weight: 700; color: var(--cor-primaria); margin-bottom: 4px; }
+.modal-subtitulo { font-size: .85rem; color: var(--cor-texto-claro); margin-bottom: 16px; }
+.modal-acoes { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.aviso-sem-prof {
+    background: #fef3c7; border: 1px solid #fde68a; color: #92400e; padding: 8px 12px;
+    border-radius: 8px; font-size: .82rem; margin-top: 8px;
+}
+</style>
+{% endblock %}
+
+{% block conteudo %}
+<div class="cabecalho-pagina">
+    <a href="{{ url_for('selecionar_turma_montagem') }}" class="btn btn-secundario">←</a>
+    <h1>Montar Horário — {{ turma['nome'] }}</h1>
+</div>
+
+<div class="flex-linha" style="margin-bottom:14px;align-items:center;">
+    <span class="badge badge-tipo">{{ turma['serie'] }}</span>
+    <span class="badge badge-tipo">{{ turma['turno'] }}</span>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+        <a href="{{ url_for('relatorio_turma', id_turma=turma['id_turma']) }}" class="btn btn-secundario">📊 Ver relatório</a>
+        <form action="{{ url_for('limpar_grade', id_turma=turma['id_turma']) }}" method="POST"
+              onsubmit="return confirm('Remover TODAS as aulas desta turma?');" style="margin:0;">
+            <button type="submit" class="btn-perigo">🗑 Limpar grade</button>
+        </form>
+    </div>
+</div>
+
+{% if horarios %}
+<table class="grade-montagem">
+    <thead>
+        <tr>
+            <th class="col-hora">Horário</th>
+            {% for dia in dias %}<th>{{ rotulos_dia[dia] }}</th>{% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for h in horarios %}
+        {% set hid = h['id_horario']|string %}
+        <tr>
+            <td class="col-hora">{{ h['hora_inicio'] }}<br>{{ h['hora_fim'] }}</td>
+            {% for dia in dias %}
+                {% set aula = grade.get(hid, {}).get(dia) %}
+                <td class="celula-grade">
+                    {% if aula %}
+                        <div class="aula-preenchida" style="background:{{ aula['cor'] }};"
+                             title="{{ aula['nome_disciplina'] }} — {{ aula['professor_curto'] }}">
+                            <span class="sigla">{{ aula['sigla'] }}</span>
+                            <span class="prof">{{ aula['professor_curto'] }}</span>
+                        </div>
+                        <form action="{{ url_for('remover_slot', id_turma=turma['id_turma'], id_alocacao=aula['id_alocacao']) }}"
+                              method="POST" style="margin:0;">
+                            <button type="submit" class="btn-remover-aula" title="Remover">✕</button>
+                        </form>
+                    {% else %}
+                        <button type="button" class="btn-add-aula"
+                                data-dia="{{ dia }}" data-diarotulo="{{ rotulos_dia[dia] }}"
+                                data-horario="{{ h['id_horario'] }}"
+                                data-hora="{{ h['hora_inicio'] }}–{{ h['hora_fim'] }}">+</button>
+                    {% endif %}
+                </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p style="color:var(--cor-texto-claro);font-size:.82rem;margin-top:12px;">
+    Clique em <strong>+</strong> para alocar uma aula. O professor só aparece se tiver disponibilidade
+    cadastrada naquele dia/horário e não estiver em outra turma no mesmo horário.
+</p>
+{% else %}
+<div class="estado-vazio" style="margin-top:24px;">
+    <span class="estado-vazio-icone">⏰</span>
+    Nenhum horário de aula cadastrado. <a href="{{ url_for('cadastrar_horario') }}">Cadastre os horários</a> primeiro.
+</div>
+{% endif %}
+
+<!-- Modal de alocação -->
+<div class="modal-fundo" id="modal-fundo">
+    <div class="modal-caixa">
+        <div class="modal-titulo">Alocar aula</div>
+        <div class="modal-subtitulo" id="modal-sub">—</div>
+        <form method="POST" action="{{ url_for('alocar_slot', id_turma=turma['id_turma']) }}" id="modal-form">
+            <input type="hidden" name="dia" id="modal-dia">
+            <input type="hidden" name="id_horario" id="modal-horario">
+            <div class="form-grupo">
+                <label>Disciplina</label>
+                <select name="id_disciplina" id="modal-disciplina" required></select>
+            </div>
+            <div class="form-grupo">
+                <label>Professor</label>
+                <select name="id_professor" id="modal-professor" required></select>
+                <div class="aviso-sem-prof" id="aviso-sem-prof" style="display:none;">
+                    Nenhum professor disponível neste horário. Cadastre a disponibilidade do professor.
+                </div>
+            </div>
+            <div class="modal-acoes">
+                <button type="button" class="btn btn-secundario" id="modal-cancelar">Cancelar</button>
+                <button type="submit" class="btn btn-primario" id="modal-salvar">Alocar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+const DISCIPLINAS   = {{ disciplinas_json|safe }};
+const PROFESSORES   = {{ professores_json|safe }};
+const DISPONIB      = {{ disponibilidades_json|safe }};   // {pid: {dia: [id_horario,...]}}
+const OCUPACAO      = {{ ocupacao_json|safe }};           // {pid: {dia: [id_horario,...]}}
+
+const modalFundo   = document.getElementById('modal-fundo');
+const modalSub     = document.getElementById('modal-sub');
+const selDisc      = document.getElementById('modal-disciplina');
+const selProf      = document.getElementById('modal-professor');
+const inpDia       = document.getElementById('modal-dia');
+const inpHorario   = document.getElementById('modal-horario');
+const avisoSemProf = document.getElementById('aviso-sem-prof');
+const btnSalvar    = document.getElementById('modal-salvar');
+
+// Preenche o select de disciplinas uma vez
+DISCIPLINAS.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d.id; o.textContent = d.sigla + ' — ' + d.nome;
+    selDisc.appendChild(o);
+});
+
+function professoresDisponiveis(dia, idHorario) {
+    return PROFESSORES.filter(p => {
+        const pid = String(p.id);
+        const disp = (DISPONIB[pid] && DISPONIB[pid][dia]) || [];
+        const ocup = (OCUPACAO[pid] && OCUPACAO[pid][dia]) || [];
+        return disp.includes(idHorario) && !ocup.includes(idHorario);
+    });
+}
+
+function abrirModal(dia, diaRotulo, idHorario, horaLabel) {
+    inpDia.value = dia;
+    inpHorario.value = idHorario;
+    modalSub.textContent = diaRotulo + ' • ' + horaLabel;
+
+    selProf.innerHTML = '';
+    const disponiveis = professoresDisponiveis(dia, idHorario);
+    if (disponiveis.length === 0) {
+        avisoSemProf.style.display = 'block';
+        btnSalvar.disabled = true;
+        selProf.disabled = true;
+    } else {
+        avisoSemProf.style.display = 'none';
+        btnSalvar.disabled = false;
+        selProf.disabled = false;
+        disponiveis.forEach(p => {
+            const o = document.createElement('option');
+            o.value = p.id; o.textContent = p.nome;
+            selProf.appendChild(o);
+        });
+    }
+    selDisc.selectedIndex = 0;
+    modalFundo.classList.add('aberto');
+}
+
+function fecharModal() { modalFundo.classList.remove('aberto'); }
+
+document.querySelectorAll('.btn-add-aula').forEach(btn => {
+    btn.addEventListener('click', () => abrirModal(
+        btn.dataset.dia, btn.dataset.diarotulo,
+        parseInt(btn.dataset.horario, 10), btn.dataset.hora
+    ));
+});
+
+document.getElementById('modal-cancelar').addEventListener('click', fecharModal);
+modalFundo.addEventListener('click', e => { if (e.target === modalFundo) fecharModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
+</script>
+{% endblock %}

@@ -24,7 +24,6 @@
     <thead>
         <tr>
             <th>Professor</th>
-            <th>CPF</th>
             <th>Contato</th>
             <th>Status</th>
             <th class="td-acoes">Ações</th>
@@ -38,11 +37,6 @@
                     <span class="avatar-ini">{{ p['nome'][0]|upper }}</span>
                     <strong>{{ p['nome'] }}</strong>
                 </div>
-            </td>
-            <td style="font-size:.85rem;font-family:monospace;">
-                {% if pode_ver_cpf %}{{ p['cpf']|formatar_cpf }}
-                {% elif p['cpf'] %}***.***.***-**
-                {% else %}<span style="opacity:.35">—</span>{% endif %}
             </td>
             <td>
                 {% if p['email'] %}<div style="font-size:.85rem;">{{ p['email'] }}</div>{% endif %}
@@ -65,7 +59,7 @@
         </tr>
         {% else %}
         <tr>
-            <td colspan="5">
+            <td colspan="4">
                 <div class="estado-vazio">
                     <span class="estado-vazio-icone">👨‍🏫</span>
                     Nenhum professor cadastrado.
@@ -96,15 +90,6 @@
         <div class="form-grupo">
             <label>Nome:</label>
             <input type="text" name="nome" value="{{ professor_edicao['nome'] }}" required>
-        </div>
-        <div class="form-grupo">
-            <label>CPF:</label>
-            {% if pode_ver_cpf %}
-            <input type="text" name="cpf" value="{{ professor_edicao['cpf'] }}" maxlength="14" placeholder="000.000.000-00">
-            {% else %}
-            <input type="text" value="***.***.***-**" disabled>
-            <input type="hidden" name="cpf" value="{{ professor_edicao['cpf'] }}">
-            {% endif %}
         </div>
         <div class="form-grupo">
             <label>Email:</label>

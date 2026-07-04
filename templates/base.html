@@ -22,37 +22,26 @@
         </h1>
         <nav>
             {% if usuario_atual %}
-                {% if usuario_atual['perfil'] == 'professor' %}
-                    <a href="{{ url_for('meu_horario') }}" class="nav-link">
-                        <span class="nav-link-icone">📅</span> Meu Horário
-                    </a>
-                    <a href="{{ url_for('selecionar_turno_relatorio') }}" class="nav-link">
-                        <span class="nav-link-icone">📊</span> Relatório
-                    </a>
-                {% else %}
-                    <a href="{{ url_for('listar_professores') }}" class="nav-link">
-                        <span class="nav-link-icone">👨‍🏫</span> Professores
-                    </a>
-                    <a href="{{ url_for('listar_disciplinas') }}" class="nav-link">
-                        <span class="nav-link-icone">📚</span> Disciplinas
-                    </a>
-                    <a href="{{ url_for('listar_turmas') }}" class="nav-link">
-                        <span class="nav-link-icone">🏫</span> Turmas
-                    </a>
-                    <a href="{{ url_for('selecionar_turno_relatorio') }}" class="nav-link">
-                        <span class="nav-link-icone">📊</span> Relatório
-                    </a>
-                    {% if usuario_atual['perfil'] == 'diretor' %}
-                        <a href="{{ url_for('listar_usuarios') }}" class="nav-link">
-                            <span class="nav-link-icone">👥</span> Usuários
-                        </a>
-                    {% endif %}
-                {% endif %}
+                <a href="{{ url_for('listar_professores') }}" class="nav-link">
+                    <span class="nav-link-icone">👨‍🏫</span> Professores
+                </a>
+                <a href="{{ url_for('listar_disciplinas') }}" class="nav-link">
+                    <span class="nav-link-icone">📚</span> Disciplinas
+                </a>
+                <a href="{{ url_for('listar_turmas') }}" class="nav-link">
+                    <span class="nav-link-icone">🏫</span> Turmas
+                </a>
+                <a href="{{ url_for('selecionar_turma_montagem') }}" class="nav-link">
+                    <span class="nav-link-icone">🗓️</span> Montar Horário
+                </a>
+                <a href="{{ url_for('selecionar_turma_relatorio') }}" class="nav-link">
+                    <span class="nav-link-icone">📊</span> Relatório
+                </a>
 
-                <a href="{{ url_for('meu_perfil') }}" class="nav-link nav-link-perfil">
+                <span class="nav-link nav-link-perfil">
                     <span class="nav-avatar">{{ usuario_atual['nome'][0].upper() }}</span>
                     <span class="nav-nome-usuario">{{ usuario_atual['nome'].split()[0] }}</span>
-                </a>
+                </span>
 
                 <form action="{{ url_for('logout') }}" method="POST"
                       style="display:inline;margin:0;padding:0;">

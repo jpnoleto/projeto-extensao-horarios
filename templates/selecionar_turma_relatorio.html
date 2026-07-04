@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block titulo %}Relatório de Horário{% endblock %}
+
+{% block conteudo %}
+<div class="cabecalho-pagina">
+    <a href="{{ url_for('index') }}" class="btn btn-secundario">←</a>
+    <h1>Relatório de Horário</h1>
+</div>
+
+<p style="color:var(--cor-texto-claro);margin-bottom:16px;">
+    Escolha a turma para gerar o relatório de horário (1 página, pronto para imprimir).
+    Os campos abaixo são opcionais e aparecem no cabeçalho do relatório.
+</p>
+
+<div class="card" style="margin-bottom:18px;">
+    <div class="layout-duplo" style="align-items:end;">
+        <div class="form-grupo" style="margin:0;">
+            <label for="nome_escola">Nome da escola (opcional)</label>
+            <input type="text" id="nome_escola" placeholder="Ex: Escola Municipal ...">
+        </div>
+        <div class="form-grupo" style="margin:0;">
+            <label for="data_rel">Data do relatório (opcional)</label>
+            <input type="text" id="data_rel" placeholder="Ex: 2º semestre / 2026">
+        </div>
+    </div>
+</div>
+
+{% for turno_nome, grupo in turmas|groupby('turno') %}
+{% set grupo_lista = grupo|list %}
+<h2 style="font-size:.9rem;text-transform:uppercase;letter-spacing:.8px;color:var(--cor-primaria);
+           opacity:.75;margin:20px 0 8px;border-bottom:1px solid var(--cor-borda);padding-bottom:5px;">
+    {{ turno_nome }}
+</h2>
+<table style="margin-bottom:6px;">
+    <thead>
+        <tr>
+            <th>Turma</th>
+            <th style="width:120px;text-align:center;">Série</th>
+            <th class="td-acoes">Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in grupo_lista %}
+        <tr>
+            <td><strong>{{ t['nome'] }}</strong></td>
+            <td style="text-align:center;"><span class="badge badge-tipo">{{ t['serie'] }}</span></td>
+            <td class="td-acoes">
+                <a href="#" class="btn btn-primario link-relatorio"
+                   data-base="{{ url_for('relatorio_turma', id_turma=t['id_turma']) }}">📊 Gerar relatório</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="estado-vazio" style="margin-top:24px;">
+    <span class="estado-vazio-icone">🏫</span>
+    Nenhuma turma cadastrada.
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+document.querySelectorAll('.link-relatorio').forEach(a => {
+    a.addEventListener('click', e => {
+        e.preventDefault();
+        const escola = document.getElementById('nome_escola').value.trim();
+        const data   = document.getElementById('data_rel').value.trim();
+        const params = new URLSearchParams();
+        if (escola) params.set('nome_escola', escola);
+        if (data)   params.set('data_rel', data);
+        const qs = params.toString();
+        window.location.href = a.dataset.base + (qs ? ('?' + qs) : '');
+    });
+});
+</script>
+{% endblock %}

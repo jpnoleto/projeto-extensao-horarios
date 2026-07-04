@@ -1,155 +1,67 @@
 from db import conectar
-from auth import requer_login, usuario_logado
-from flask import render_template, Response, flash, redirect, url_for, request
+from auth import requer_login
+from flask import render_template, request, redirect, url_for, flash
+
+DIAS = ['segunda', 'terca', 'quarta', 'quinta', 'sexta']
 
 
 def registrar(app):
 
-    @app.route('/meu_horario')
+    @app.route('/relatorio')
     @requer_login
-    def meu_horario():
-        u = usuario_logado()
-        if not u or u['perfil'] != 'professor' or not u['id_professor']:
-            return redirect(url_for('index'))
-        dados = _montar_dados_professor(u['id_professor'])
-        return render_template('meu_horario.html', **dados)
-
-    @app.route('/selecionar_turno_relatorio')
-    @requer_login
-    def selecionar_turno_relatorio():
+    def selecionar_turma_relatorio():
         with conectar() as conexao:
             cursor = conexao.cursor()
-            cursor.execute("SELECT * FROM turno ORDER BY nome")
-            turnos = cursor.fetchall()
-        id_turno = request.args.get('id_turno', type=int)
-        if id_turno:
-            nome_escola = request.args.get('nome_escola', '')
-            data_rel    = request.args.get('data_rel', '')
-            return redirect(url_for('relatorio_horario_turno',
-                                    id_turno=id_turno,
-                                    nome_escola=nome_escola,
-                                    data_rel=data_rel))
-        return render_template('selecionar_turno_relatorio.html', turnos=turnos)
+            cursor.execute("""
+                SELECT id_turma, nome, serie, turno
+                FROM turma ORDER BY turno, serie, nome
+            """)
+            turmas = cursor.fetchall()
+        return render_template('selecionar_turma_relatorio.html', turmas=turmas)
 
-    @app.route('/relatorio_horario_turno/<int:id_turno>')
+    @app.route('/relatorio/<int:id_turma>')
     @requer_login
-    def relatorio_horario_turno(id_turno):
-        turno, turmas, horarios, dias, grade = _montar_dados_relatorio(id_turno)
-        if not turno:
-            return redirect(url_for('selecionar_turno_relatorio'))
-        if not turmas:
-            flash('Este turno não possui turmas cadastradas.', 'erro')
-            return redirect(url_for('selecionar_turno_relatorio'))
+    def relatorio_turma(id_turma):
+        turma, horarios, grade = _montar_dados_relatorio(id_turma)
+        if not turma:
+            flash("Turma não encontrada.", 'erro')
+            return redirect(url_for('selecionar_turma_relatorio'))
         nome_escola = request.args.get('nome_escola', '')
-        data_rel    = request.args.get('data_rel', '')
+        data_rel = request.args.get('data_rel', '')
         return render_template('relatorio.html',
-                               turno=turno, turmas=turmas,
-                               horarios=horarios, dias=dias, grade=grade,
+                               turma=turma, horarios=horarios, dias=DIAS, grade=grade,
                                nome_escola=nome_escola, data_rel=data_rel)
 
-    @app.route('/baixar_relatorio_pdf/<int:id_turno>')
-    @requer_login
-    def baixar_relatorio_pdf(id_turno):
-        flash("Para salvar em PDF: use o botão 'Imprimir / Salvar PDF' e escolha 'Salvar como PDF' no diálogo de impressão do navegador.", 'erro')
-        return redirect(url_for('relatorio_horario_turno', id_turno=id_turno,
-                                nome_escola=request.args.get('nome_escola', ''),
-                                data_rel=request.args.get('data_rel', '')))
 
-
-def _montar_dados_professor(id_professor):
+def _montar_dados_relatorio(id_turma):
     with conectar() as conexao:
         cursor = conexao.cursor()
-        cursor.execute("SELECT nome FROM professor WHERE id_professor = %s", (id_professor,))
-        row = cursor.fetchone()
-        professor_nome = row['nome'] if row else 'Professor'
-        cursor.execute("""
-            SELECT * FROM horario_aula
-            WHERE eh_intervalo = 1
-               OR id_horario IN (
-                   SELECT DISTINCT id_horario FROM alocacao WHERE id_professor = %s
-               )
-            ORDER BY hora_inicio
-        """, (id_professor,))
+        cursor.execute("SELECT * FROM turma WHERE id_turma = %s", (id_turma,))
+        turma = cursor.fetchone()
+        if not turma:
+            return None, None, None
+        cursor.execute("SELECT * FROM horario_aula ORDER BY hora_inicio")
         horarios = cursor.fetchall()
         cursor.execute("""
             SELECT a.dia_semana, a.id_horario,
                    d.nome AS nome_disciplina, d.sigla, d.cor,
-                   t.nome AS nome_turma, t.serie,
-                   l.nome AS nome_local
-            FROM alocacao a
-            JOIN disciplina d ON a.id_disciplina = d.id_disciplina
-            JOIN turma t ON a.id_turma = t.id_turma
-            JOIN `local` l ON a.id_local = l.id_local
-            WHERE a.id_professor = %s
-        """, (id_professor,))
-        alocacoes = cursor.fetchall()
-    dias = ['segunda', 'terca', 'quarta', 'quinta', 'sexta']
-    grade = {}
-    for a in alocacoes:
-        ih  = a['id_horario']
-        dia = a['dia_semana']
-        if ih not in grade:
-            grade[ih] = {}
-        grade[ih][dia] = {
-            'sigla':          a['sigla'],
-            'cor':            a['cor'],
-            'nome_disciplina': a['nome_disciplina'],
-            'turma':          f"{a['nome_turma']} – {a['serie']}",
-            'local':          a['nome_local'],
-        }
-    return {'professor_nome': professor_nome, 'horarios': horarios, 'dias': dias, 'grade': grade}
-
-
-def _montar_dados_relatorio(id_turno):
-    with conectar() as conexao:
-        cursor = conexao.cursor()
-        cursor.execute("SELECT * FROM turno WHERE id_turno = %s", (id_turno,))
-        turno = cursor.fetchone()
-        if not turno:
-            return None, None, None, None, None
-        cursor.execute("""
-            SELECT t.id_turma, t.nome, t.serie
-            FROM turma t WHERE t.id_turno = %s
-            ORDER BY t.serie, t.nome
-        """, (id_turno,))
-        turmas = cursor.fetchall()
-        cursor.execute("SELECT * FROM horario_aula ORDER BY hora_inicio")
-        horarios = cursor.fetchall()
-        cursor.execute("""
-            SELECT a.id_turma, a.dia_semana, a.id_horario,
-                   d.nome AS nome_disciplina, d.sigla, d.cor,
                    p.nome AS professor
             FROM alocacao a
-            JOIN turma t ON a.id_turma = t.id_turma
             JOIN disciplina d ON a.id_disciplina = d.id_disciplina
             JOIN professor p ON a.id_professor = p.id_professor
-            WHERE t.id_turno = %s
-        """, (id_turno,))
+            WHERE a.id_turma = %s
+        """, (id_turma,))
         alocacoes = cursor.fetchall()
 
-    dias = ['segunda', 'terca', 'quarta', 'quinta', 'sexta']
-
-    # Garante que o intervalo sempre aparece na 4ª posição (após 3 aulas)
-    regulares = [h for h in horarios if not h['eh_intervalo']]
-    intervalos = [h for h in horarios if h['eh_intervalo']]
-    horarios = regulares[:3] + intervalos + regulares[3:]
-
-    # Dicionário aninhado para evitar problemas de lookup com tupla no Jinja2
     grade = {}
     for a in alocacoes:
-        ih  = a['id_horario']
+        ih = a['id_horario']
         dia = a['dia_semana']
-        it  = a['id_turma']
-        if ih not in grade:
-            grade[ih] = {}
-        if dia not in grade[ih]:
-            grade[ih][dia] = {}
         nome_prof = a['professor'] or ''
-        primeiro_nome = nome_prof.split()[0] if nome_prof else ''
-        grade[ih][dia][it] = {
-            'sigla':          a['sigla'],
-            'cor':            a['cor'],
-            'professor':      nome_prof,
-            'professor_curto': primeiro_nome,
+        grade.setdefault(ih, {})[dia] = {
+            'sigla': a['sigla'],
+            'cor': a['cor'],
+            'nome_disciplina': a['nome_disciplina'],
+            'professor_curto': nome_prof.split()[0] if nome_prof else '',
         }
-    return turno, turmas, horarios, dias, grade
+    return turma, horarios, grade

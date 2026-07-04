@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block titulo %}Montar Horário{% endblock %}
+
+{% block conteudo %}
+<div class="cabecalho-pagina">
+    <a href="{{ url_for('index') }}" class="btn btn-secundario">←</a>
+    <h1>Montar Horário</h1>
+    <span class="contador-badge">{{ turmas|length }}</span>
+</div>
+
+<p style="color:var(--cor-texto-claro);margin-bottom:16px;">
+    Escolha a turma para montar a grade de horário manualmente.
+</p>
+
+{% for turno_nome, grupo in turmas|groupby('turno') %}
+{% set grupo_lista = grupo|list %}
+<h2 style="font-size:.9rem;text-transform:uppercase;letter-spacing:.8px;color:var(--cor-primaria);
+           opacity:.75;margin:20px 0 8px;border-bottom:1px solid var(--cor-borda);padding-bottom:5px;">
+    {{ turno_nome }}
+</h2>
+<table style="margin-bottom:6px;">
+    <thead>
+        <tr>
+            <th>Turma</th>
+            <th style="width:120px;text-align:center;">Série</th>
+            <th style="width:130px;text-align:center;">Aulas na grade</th>
+            <th class="td-acoes">Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in grupo_lista %}
+        <tr>
+            <td><strong>{{ t['nome'] }}</strong></td>
+            <td style="text-align:center;"><span class="badge badge-tipo">{{ t['serie'] }}</span></td>
+            <td style="text-align:center;font-weight:700;color:var(--cor-primaria);">{{ t['total_aloc'] }}</td>
+            <td class="td-acoes">
+                <a href="{{ url_for('montar_grade', id_turma=t['id_turma']) }}" class="btn btn-primario">
+                    🗓️ Montar grade
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="estado-vazio" style="margin-top:24px;">
+    <span class="estado-vazio-icone">🏫</span>
+    Nenhuma turma cadastrada. <a href="{{ url_for('cadastrar_turma') }}">Cadastre uma turma</a> primeiro.
+</div>
+{% endfor %}
+{% endblock %}

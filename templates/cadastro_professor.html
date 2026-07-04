@@ -15,10 +15,6 @@
                 <input type="text" name="nome" required autofocus>
             </div>
             <div class="form-grupo">
-                <label>CPF (somente dígitos, 11 caracteres)</label>
-                <input type="text" name="cpf" maxlength="14" placeholder="000.000.000-00">
-            </div>
-            <div class="form-grupo">
                 <label>E-mail</label>
                 <input type="email" name="email">
             </div>
@@ -35,13 +31,13 @@
         {% if professores %}
         <table class="tabela-lateral">
             <thead>
-                <tr><th>Nome</th><th>CPF</th><th>Status</th></tr>
+                <tr><th>Nome</th><th>E-mail</th><th>Status</th></tr>
             </thead>
             <tbody>
                 {% for p in professores %}
                 <tr>
                     <td>{{ p['nome'] }}</td>
-                    <td>{{ p['cpf'] or '—' }}</td>
+                    <td>{{ p['email'] or '—' }}</td>
                     <td><span class="badge badge-{{ p['status'] }}">{{ p['status'] }}</span></td>
                 </tr>
                 {% endfor %}

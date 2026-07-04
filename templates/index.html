@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block titulo %}Dashboard{% endblock %}
+{% block titulo %}Painel{% endblock %}
 
 {% block conteudo %}
 
@@ -7,30 +7,15 @@
 <div class="boas-vindas">
     <div>
         <div class="boas-vindas-saudacao">
-            {% if usuario_atual %}
-                {% if usuario_atual['perfil'] == 'diretor' %}👑
-                {% elif usuario_atual['perfil'] == 'secretaria' %}📋
-                {% else %}👨‍🏫{% endif %}
-                Olá, {{ usuario_atual['nome'].split()[0] }}!
-            {% else %}
-                Bem-vindo!
-            {% endif %}
+            👋 Olá{% if usuario_atual %}, {{ usuario_atual['nome'].split()[0] }}{% endif %}!
         </div>
-        <div class="boas-vindas-perfil">
-            {% if usuario_atual %}
-                {% if usuario_atual['perfil'] == 'diretor' %}Diretor — Acesso administrativo completo
-                {% elif usuario_atual['perfil'] == 'secretaria' %}Secretaria — Gestão de horários e cadastros
-                {% else %}Professor — Visualização de horários{% endif %}
-            {% endif %}
-        </div>
+        <div class="boas-vindas-perfil">Painel de montagem manual de horários</div>
     </div>
     <div class="boas-vindas-meta">
         <div class="boas-vindas-data" id="data-atual">—</div>
         <div class="boas-vindas-hora" id="hora-atual">—:—</div>
     </div>
 </div>
-
-{% if usuario_atual and usuario_atual['perfil'] != 'professor' %}
 
 <!-- Cards de Estatísticas -->
 <div class="dashboard-stats">
@@ -58,9 +43,9 @@
             <div class="stat-card-label">Disciplinas</div>
         </div>
     </a>
-    <a href="{{ url_for('selecionar_turno_alocacoes') }}" class="stat-card"
+    <a href="{{ url_for('selecionar_turma_montagem') }}" class="stat-card"
        style="--stat-cor:#f59e0b; --stat-bg:rgba(245,158,11,0.10);">
-        <div class="stat-card-icon">📋</div>
+        <div class="stat-card-icon">🗓️</div>
         <div class="stat-card-corpo">
             <div class="stat-card-numero">{{ total_alocacoes }}</div>
             <div class="stat-card-label">Aulas Alocadas</div>
@@ -108,28 +93,6 @@
 
             <div class="acoes-divisor"></div>
 
-            <a href="{{ url_for('cadastrar_turno') }}" class="acao-rapida">
-                <span class="acao-rapida-icone" style="background:rgba(245,158,11,0.13);">⏱️</span>
-                <span class="acao-rapida-label">Novo Turno</span>
-            </a>
-            <a href="{{ url_for('listar_turnos') }}" class="acao-rapida">
-                <span class="acao-rapida-icone" style="background:rgba(245,158,11,0.07);">🕐</span>
-                <span class="acao-rapida-label">Listar Turnos</span>
-            </a>
-
-            <div class="acoes-divisor"></div>
-
-            <a href="{{ url_for('cadastrar_local') }}" class="acao-rapida">
-                <span class="acao-rapida-icone" style="background:rgba(248,113,113,0.13);">📍</span>
-                <span class="acao-rapida-label">Novo Local</span>
-            </a>
-            <a href="{{ url_for('listar_locais') }}" class="acao-rapida">
-                <span class="acao-rapida-icone" style="background:rgba(248,113,113,0.07);">🗺️</span>
-                <span class="acao-rapida-label">Listar Locais</span>
-            </a>
-
-            <div class="acoes-divisor"></div>
-
             <a href="{{ url_for('cadastrar_horario') }}" class="acao-rapida">
                 <span class="acao-rapida-icone" style="background:rgba(106,110,121,0.15);">⏰</span>
                 <span class="acao-rapida-label">Novo Horário de Aula</span>
@@ -141,21 +104,10 @@
         </div>
     </div>
 
-    <!-- Vínculos e Disponibilidade -->
+    <!-- Disponibilidade -->
     <div class="modulo-card">
-        <h2 class="modulo-titulo"><span class="modulo-icone">🔗</span> Vínculos & Disponibilidade</h2>
+        <h2 class="modulo-titulo"><span class="modulo-icone">✅</span> Disponibilidade</h2>
         <div class="acoes-lista">
-            <a href="{{ url_for('cadastrar_professor_disciplina') }}" class="acao-rapida">
-                <span class="acao-rapida-icone" style="background:rgba(59,130,246,0.13);">🔗</span>
-                <span class="acao-rapida-label">Vincular Professor × Disciplina</span>
-            </a>
-            <a href="{{ url_for('listar_professores_disciplinas') }}" class="acao-rapida">
-                <span class="acao-rapida-icone" style="background:rgba(59,130,246,0.07);">📋</span>
-                <span class="acao-rapida-label">Listar Vínculos</span>
-            </a>
-
-            <div class="acoes-divisor"></div>
-
             <a href="{{ url_for('cadastrar_disponibilidade_professor') }}" class="acao-rapida">
                 <span class="acao-rapida-icone" style="background:rgba(16,185,129,0.13);">✅</span>
                 <span class="acao-rapida-label">Cadastrar Disponibilidade</span>
@@ -171,73 +123,25 @@
         </div>
     </div>
 
-    <!-- Planejamento -->
+    <!-- Montagem e Relatório -->
     <div class="modulo-card">
-        <h2 class="modulo-titulo"><span class="modulo-icone">📋</span> Planejamento & Relatórios</h2>
+        <h2 class="modulo-titulo"><span class="modulo-icone">🗓️</span> Horários & Relatório</h2>
         <div class="acoes-lista">
-            <a href="{{ url_for('cadastrar_grade_curricular') }}" class="acao-rapida">
-                <span class="acao-rapida-icone" style="background:rgba(139,92,246,0.13);">📐</span>
-                <span class="acao-rapida-label">Nova Grade Curricular</span>
-            </a>
-            <a href="{{ url_for('selecionar_turno_grades') }}" class="acao-rapida">
-                <span class="acao-rapida-icone" style="background:rgba(139,92,246,0.07);">📚</span>
-                <span class="acao-rapida-label">Listar Grades Curriculares</span>
+            <a href="{{ url_for('selecionar_turma_montagem') }}" class="acao-destaque">
+                <span class="acao-rapida-icone">✏️</span>
+                <span class="acao-rapida-label">Montar Horário da Turma</span>
             </a>
 
             <div class="acoes-divisor"></div>
 
-            <a href="{{ url_for('selecionar_turma_alocacao') }}" class="acao-rapida">
-                <span class="acao-rapida-icone" style="background:rgba(245,158,11,0.13);">✏️</span>
-                <span class="acao-rapida-label">Alocar por Turma</span>
-            </a>
-            <a href="{{ url_for('selecionar_turno_alocacoes') }}" class="acao-rapida">
-                <span class="acao-rapida-icone" style="background:rgba(184,50,34,0.09);">👁️</span>
-                <span class="acao-rapida-label">Ver Todas as Alocações</span>
-            </a>
-
-            <div class="acoes-divisor"></div>
-
-            <a href="{{ url_for('selecionar_turno_relatorio') }}" class="acao-rapida acao-azul">
+            <a href="{{ url_for('selecionar_turma_relatorio') }}" class="acao-rapida acao-azul">
                 <span class="acao-rapida-icone">📊</span>
-                <span class="acao-rapida-label">Relatório por Turno</span>
-            </a>
-
-            <div class="acoes-divisor"></div>
-
-            <a href="{{ url_for('alocacao_automatica') }}" class="acao-destaque">
-                <span class="acao-rapida-icone">⚡</span>
-                <span class="acao-rapida-label">Alocação Automática por Turno</span>
-            </a>
-            <a href="{{ url_for('listar_sugestoes') }}" class="acao-rapida acao-verde">
-                <span class="acao-rapida-icone">✦</span>
-                <span class="acao-rapida-label">Sugestões Automáticas de Alocações</span>
-                {% if total_sugestoes > 0 %}
-                    <span class="acao-rapida-badge">{{ total_sugestoes }}</span>
-                {% endif %}
+                <span class="acao-rapida-label">Relatório da Turma (1 página)</span>
             </a>
         </div>
     </div>
 
 </div><!-- /dashboard-modulos -->
-
-{% else %}
-<!-- View simplificada para professor -->
-<div class="dashboard-modulos" style="grid-template-columns: 1fr;">
-    <div class="modulo-card" style="max-width: 480px; margin: 0 auto; width: 100%;">
-        <h2 class="modulo-titulo"><span class="modulo-icone">📅</span> Meus Horários</h2>
-        <div class="acoes-lista">
-            <a href="{{ url_for('meu_horario') }}" class="acao-destaque">
-                <span class="acao-rapida-icone">📋</span>
-                <span class="acao-rapida-label">Ver Meu Horário</span>
-            </a>
-            <a href="{{ url_for('selecionar_turno_relatorio') }}" class="acao-rapida acao-azul">
-                <span class="acao-rapida-icone">📊</span>
-                <span class="acao-rapida-label">Relatório por Turno</span>
-            </a>
-        </div>
-    </div>
-</div>
-{% endif %}
 
 {% endblock %}
 

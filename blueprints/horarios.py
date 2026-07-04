@@ -82,8 +82,11 @@ def registrar(app):
     @app.route('/deletar_horario/<int:id_horario>', methods=['POST'])
     @requer_perfil('diretor', 'secretaria')
     def deletar_horario(id_horario):
-        with conectar() as conexao:
-            cursor = conexao.cursor()
-            cursor.execute('DELETE FROM horario_aula WHERE id_horario = %s', (id_horario,))
-            conexao.commit()
+        try:
+            with conectar() as conexao:
+                cursor = conexao.cursor()
+                cursor.execute('DELETE FROM horario_aula WHERE id_horario = %s', (id_horario,))
+                conexao.commit()
+        except pymysql.IntegrityError:
+            flash("Não é possível excluir: o horário está em uso em disponibilidades ou aulas alocadas.", 'erro')
         return redirect(url_for('listar_horarios'))

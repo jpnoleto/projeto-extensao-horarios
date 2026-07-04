@@ -25,7 +25,6 @@
         <tr>
             <th>Disciplina</th>
             <th>Sigla</th>
-            <th style="text-align:center;">Aulas/Semana</th>
             <th class="td-acoes">Ações</th>
         </tr>
     </thead>
@@ -44,9 +43,6 @@
                     {{ d['sigla'] }}
                 </span>
             </td>
-            <td style="text-align:center;font-weight:700;color:var(--cor-primaria);font-size:.95rem;">
-                {{ d['carga_horaria_semanal'] }}
-            </td>
             <td class="td-acoes">
                 <div class="flex-linha">
                     <a href="{{ url_for('editar_disciplina', id_disciplina=d['id_disciplina']) }}#form-edicao"
@@ -60,7 +56,7 @@
         </tr>
         {% else %}
         <tr>
-            <td colspan="4">
+            <td colspan="3">
                 <div class="estado-vazio">
                     <span class="estado-vazio-icone">📚</span>
                     Nenhuma disciplina cadastrada.
@@ -123,10 +119,6 @@
                 </div>
                 <input type="color" id="cor-input-edit" name="cor" value="{{ disciplina_edicao['cor'] }}" class="input-cor-nativo">
             </div>
-        </div>
-        <div class="form-grupo">
-            <label>Carga Horária Semanal:</label>
-            <input type="number" name="carga_horaria_semanal" value="{{ disciplina_edicao['carga_horaria_semanal'] }}" required>
         </div>
         <button type="submit">Atualizar</button>
     </form>

@@ -36,7 +36,7 @@
     </div>
 </div>
 
-{% for turno_nome, grupo in turmas|groupby('nome_turno') %}
+{% for turno_nome, grupo in turmas|groupby('turno') %}
 {% set grupo_lista = grupo|list %}
 
 <div class="grupo-turno-header">
@@ -54,7 +54,7 @@
     <thead>
         <tr>
             <th>Turma</th>
-            <th style="width:80px;text-align:center;">Série</th>
+            <th style="width:120px;text-align:center;">Série</th>
             <th class="td-acoes">Ações</th>
         </tr>
     </thead>
@@ -63,13 +63,13 @@
         <tr>
             <td><strong>{{ t['nome'] }}</strong></td>
             <td style="text-align:center;">
-                <span class="badge badge-tipo">{{ t['serie'] }}ª</span>
+                <span class="badge badge-tipo">{{ t['serie'] }}</span>
             </td>
             <td class="td-acoes">
                 <div class="flex-linha">
-                    <a href="{{ url_for('alocar_turma_completa', id_turma=t['id_turma']) }}"
+                    <a href="{{ url_for('montar_grade', id_turma=t['id_turma']) }}"
                        class="btn btn-secundario" style="font-size:.78rem;padding:5px 10px;"
-                       title="Abrir editor de alocação">⚡ Alocar</a>
+                       title="Montar horário desta turma">🗓️ Montar</a>
                     <a href="{{ url_for('editar_turma', id_turma=t['id_turma']) }}#form-edicao"
                        class="btn btn-secundario">Editar</a>
                     <form action="{{ url_for('deletar_turma', id_turma=t['id_turma']) }}" method="POST">
@@ -105,11 +105,11 @@
         </div>
         <div class="form-grupo">
             <label>Turno:</label>
-            <select name="id_turno" required>
+            <select name="turno" required>
                 {% for turno in turnos %}
-                <option value="{{ turno['id_turno'] }}"
-                    {% if turma_edicao['id_turno'] == turno['id_turno'] %}selected{% endif %}>
-                    {{ turno['nome'] }}
+                <option value="{{ turno }}"
+                    {% if turma_edicao['turno'] == turno %}selected{% endif %}>
+                    {{ turno }}
                 </option>
                 {% endfor %}
             </select>

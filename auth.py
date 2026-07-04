@@ -9,9 +9,6 @@ def usuario_logado():
     return {
         'id': session['usuario_id'],
         'nome': session['usuario_nome'],
-        'perfil': session['usuario_perfil'],
-        'id_professor': session.get('usuario_id_professor'),
-        'primeiro_login': session.get('usuario_primeiro_login', 0),
     }
 
 
@@ -25,17 +22,7 @@ def requer_login(f):
     return decorado
 
 
-def requer_perfil(*perfis):
-    def decorador(f):
-        @wraps(f)
-        def decorado(*args, **kwargs):
-            u = usuario_logado()
-            if not u:
-                flash("Faça login para continuar.", 'erro')
-                return redirect(url_for('login'))
-            if u['perfil'] not in perfis:
-                flash("Você não tem permissão para acessar esta página.", 'erro')
-                return redirect(url_for('index'))
-            return f(*args, **kwargs)
-        return decorado
-    return decorador
+# Sistema com um único perfil (administrador). Mantido como alias de `requer_login`
+# para não reescrever o decorator em cada rota dos blueprints — só exige login.
+def requer_perfil(*_perfis):
+    return requer_login

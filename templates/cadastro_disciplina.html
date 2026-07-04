@@ -47,10 +47,6 @@
                     <small style="color:var(--cor-texto-claro)">Clique no círculo para o seletor completo</small>
                 </div>
             </div>
-            <div class="form-grupo">
-                <label>Aulas por Semana <span style="color:var(--cor-erro)">*</span></label>
-                <input type="number" name="carga_horaria_semanal" min="1" required>
-            </div>
             <button type="submit">Salvar</button>
         </form>
     </div>
@@ -60,7 +56,7 @@
         {% if disciplinas %}
         <table class="tabela-lateral">
             <thead>
-                <tr><th>Cor</th><th>Nome</th><th>Sigla</th><th>Aulas/sem</th></tr>
+                <tr><th>Cor</th><th>Nome</th><th>Sigla</th></tr>
             </thead>
             <tbody>
                 {% for d in disciplinas %}
@@ -70,7 +66,6 @@
                     </td>
                     <td>{{ d['nome'] }}</td>
                     <td>{{ d['sigla'] }}</td>
-                    <td>{{ d['carga_horaria_semanal'] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
