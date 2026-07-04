@@ -28,8 +28,8 @@ Documento acadêmico completo (resumo, objetivos, metodologia, resultados): **[[
 | Banco de dados | MySQL via PyMySQL |
 | Templates | Jinja2 (herdam de `base.html`) |
 | Animações | Motion.dev v11.11.13 (CDN) |
-| Servidor de produção | Gunicorn (WSGI multi-worker) |
-| Modo de entrega padrão | Demonstração local + código aberto no GitHub (sem necessidade de hospedagem online) |
+| Servidor | Servidor de desenvolvimento do Flask (uso local) |
+| Modo de entrega | Demonstração local + código aberto no GitHub (sem hospedagem online) |
 
 ## Como rodar localmente
 
@@ -52,8 +52,7 @@ python rotas.py         # http://127.0.0.1:5000
 | `DATABASE_URL` | ✅ | `mysql://user:pass@host:3306/db` |
 | `SECRET_KEY` | ✅ em produção | Falha ao iniciar se ausente quando `FLASK_DEBUG=0` |
 | `FLASK_DEBUG` | Não (default `0`) | `1` apenas em dev local |
-| `DB_SEED_DEFAULT_USERS` | Não (default `false`) | Cria o admin `admin@escola.com / admin123`. **NUNCA em produção.** |
-| `PORT` | Auto | Porta HTTP (Railway/Heroku preenchem) |
+| `DB_SEED_DEFAULT_USERS` | Não (default `false`) | Cria o admin `admin@escola.com / admin123` (só em dev) |
 
 Detalhamento completo em `.env.example` (raiz do projeto).
 
@@ -61,8 +60,6 @@ Detalhamento completo em `.env.example` (raiz do projeto).
 
 ```
 rotas.py                  ← ponto de entrada Flask
-wsgi.py                   ← entrypoint para PythonAnywhere
-Procfile                  ← entrypoint para Railway/Render (gunicorn)
 blueprints/               ← um módulo por área (cadastros, disponibilidade, montagem, relatório)
 db.py                     ← conectar() com DictCursor
 auth.py                   ← usuario_logado(), requer_login (requer_perfil é alias)
@@ -71,18 +68,15 @@ limpar_banco.py           ← reset completo (DROP de todas as tabelas)
 templates/                ← Jinja2, herdam de base.html
 static/css/style.css      ← design system global
 .env.example              ← documenta variáveis de ambiente
-DEPLOY.md                 ← guia de deploy (PythonAnywhere/Railway/Render)
 DOCUMENTACAO_PROJETO.md   ← documento acadêmico de extensão
 ```
 
-## Segurança (hardening de produção)
+## Segurança
 
-- `SECRET_KEY` obrigatória — RuntimeError se ausente em produção
-- `FLASK_DEBUG=0` por default — sem traceback exposto
-- Cookies de sessão com `HttpOnly`, `SameSite=Lax`, `Secure` (HTTPS-only)
-- Senhas hasheadas com `werkzeug.security` (PBKDF2 600k iterações + salt)
-- Servidor de produção via Gunicorn (não o dev server do Flask)
-- Usuários default só com `DB_SEED_DEFAULT_USERS=true` (off em produção)
+- `SECRET_KEY` obrigatória fora do modo debug — RuntimeError se ausente
+- Cookies de sessão com `HttpOnly`, `SameSite=Lax`, `Secure` (fora do debug)
+- Senhas hasheadas com `werkzeug.security` (PBKDF2 + salt)
+- Admin default só com `DB_SEED_DEFAULT_USERS=true`
 - `.env` no `.gitignore` — credenciais nunca commitadas
 
 ## Links rápidos
@@ -92,5 +86,4 @@ DOCUMENTACAO_PROJETO.md   ← documento acadêmico de extensão
 - [[Montagem da Grade]] — montagem manual do horário por turma
 - [[Visual e Tema]] — design system Academic Authority
 - [[Autenticação]] — login único de administrador
-- [[Deploy]] — local (padrão), Render, Oracle Cloud
 - [[Restrições e Especificações]] — regras de negócio

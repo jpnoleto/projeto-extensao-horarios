@@ -12,5 +12,6 @@ a disponibilidade, e imprime um relatório de 1 página.
 - [[Montagem da Grade]] — montagem manual do horário por turma (núcleo do sistema)
 - [[Visual e Tema]] — design system Academic Authority, classes CSS, animações
 - [[Autenticação]] — login único de administrador
-- [[Deploy]] — demonstração local (padrão), Render, Oracle Cloud, PDF por impressão
 - [[Restrições e Especificações]] — regras estruturais (unicidade, disponibilidade, formatos)
+
+> Entrega: demonstração **local** (`python rotas.py`) + código aberto no GitHub. Não há deploy online.

@@ -41,7 +41,6 @@ pip install -r requirements.txt
 | `SECRET_KEY` | Recomendada | Chave Flask de sessão (fallback inseguro só em `FLASK_DEBUG`) |
 | `DB_SEED_DEFAULT_USERS` | Não | Se `true`, cria o admin default (`admin@escola.com` / `admin123`) |
 | `FLASK_DEBUG` | Não | `true` liga debug e reload de templates |
-| `PORT` | Deploy | Porta HTTP (padrão 5000) |
 
 ## Arquitetura
 
@@ -184,8 +183,9 @@ Envolver os botões num `<div class="flex-linha">`. Link "Editar" termina em `#f
 `base.html` importa `motion@11.11.13/+esm` e anima header, cards, linhas de tabela e alertas na
 entrada. Novos templates com listas ganham a cascata de `tbody tr` automaticamente.
 
-## Entrega e Deploy
+## Entrega
 
-**Modo padrão: demonstração local + código aberto.** Roda localmente (`python rotas.py`) e é
-demonstrado presencialmente; não depende de hospedagem. `Procfile` e `wsgi.py` coexistem para quem
-quiser subir em Render/Railway. Detalhes em `DEPLOY.md`.
+**Demonstração local + código aberto.** O sistema roda localmente (`python rotas.py` →
+<http://127.0.0.1:5000>) e é apresentado presencialmente; não há hospedagem online nem arquivos de
+deploy (Procfile/wsgi/gunicorn foram removidos). O código-fonte fica publicado no GitHub sob licença
+aberta para quem quiser instalar localmente.
