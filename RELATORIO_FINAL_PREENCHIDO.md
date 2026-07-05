@@ -57,40 +57,42 @@ Drafts dos campos do "RELATÓRIO FINAL — ENGENHARIA DE SOFTWARE — PROJETO DE
 >
 > 1. **Levantamento de necessidades** junto à equipe pedagógica da escola parceira, identificando como eram organizados os horários das disciplinas curriculares — em especial as de cunho cultural (Arte, Música, Educação Física, Filosofia, Literatura) — e quais eram os principais gargalos do processo manual realizado em planilhas.
 >
-> 2. **Modelagem do domínio** em banco de dados relacional MySQL, contemplando todas as entidades envolvidas: professores, disciplinas, turnos, turmas, locais, horários de aula, grade curricular e alocações.
+> 2. **Modelagem do domínio** em banco de dados relacional MySQL, contemplando as entidades envolvidas: professores, disciplinas, turmas, horários de aula, disponibilidade dos professores e alocações.
 >
-> 3. **Desenvolvimento incremental** em Python com o microframework Flask, dividindo a aplicação em blueprints (um módulo Python por entidade) e adotando renderização *server-side* via Jinja2 para reduzir a barreira de manutenção por outros desenvolvedores.
+> 3. **Desenvolvimento incremental** em Python com o microframework Flask, dividindo a aplicação em blueprints (um módulo Python por área) e adotando renderização *server-side* via Jinja2 para reduzir a barreira de manutenção por outros desenvolvedores.
 >
-> 4. **Implementação do algoritmo de alocação automática** baseado no heurístico *Most Constrained Variable* (MCV), oriundo da disciplina de Inteligência Artificial, que gera uma proposta completa de grade horária respeitando a disponibilidade de cada professor e a grade curricular do turno.
+> 4. **Prototipação de alocação automática e decisão de projeto** — chegou-se a implementar um protótipo de geração automática de grade baseado no heurístico *Most Constrained Variable* (MCV), estudado em Inteligência Artificial. Após testes, optou-se por **não** incluí-lo na versão final: a geração automática mostrou-se rígida diante das preferências pedagógicas reais e retirava do gestor o controle sobre decisões que são, por natureza, humanas. A versão entregue adota **montagem manual assistida**, em que o gestor decide cada aula e o sistema atua como validador de disponibilidade e conflitos.
 >
-> 5. **Construção do relatório de impressão** otimizado para uma única página A4 paisagem, com identificação visual por cor de cada disciplina (incluindo as culturais) e margens uniformes, facilitando a fixação física da grade nos murais escolares.
+> 5. **Construção da tela de montagem manual da grade**, por turma, na qual cada célula (dia × horário) oferece apenas professores disponíveis e livres, impedindo conflitos automaticamente.
 >
-> 6. **Hardening de segurança** antes da disponibilização pública: proteção da `SECRET_KEY`, cookies de sessão com `HttpOnly`/`SameSite`/`Secure`, senhas com hash via `werkzeug.security`, controle de acesso por perfis (diretor, secretaria, professor) e remoção das credenciais default do código aberto.
+> 6. **Construção do relatório de impressão** otimizado para uma única página A4 paisagem por turma, com identificação visual por cor de cada disciplina (incluindo as culturais), facilitando a fixação física da grade nos murais escolares.
 >
-> 7. **Publicação do código-fonte sob licença aberta** no GitHub (<https://github.com/jpnoleto/projeto-extensao-horarios>), com documentação técnica completa (`CLAUDE.md`) e guia de instalação (`DEPLOY.md`), garantindo que a escola parceira ou qualquer outra instituição interessada possa instalar e operar a ferramenta em sua própria infraestrutura, sem custos.
+> 7. **Boas práticas de segurança**: proteção da `SECRET_KEY`, cookies de sessão com `HttpOnly`/`SameSite`/`Secure`, senhas com hash via `werkzeug.security`, login de administrador e ausência de credenciais reais no código aberto.
 >
-> 8. **Apresentação presencial à equipe gestora** da escola parceira — demonstração assistida do sistema em pleno funcionamento, com simulação de cadastros, geração da grade automática, impressão do relatório por turno e acesso individual de professores —, seguida de treinamento básico de uso e coleta de feedback.
+> 8. **Publicação do código-fonte sob licença aberta** no GitHub (<https://github.com/jpnoleto/projeto-extensao-horarios>), com documentação técnica completa (`CLAUDE.md`) e instruções de instalação local, garantindo que a escola parceira ou qualquer outra instituição interessada possa instalar e operar a ferramenta no próprio computador, sem custos.
+>
+> 9. **Apresentação presencial à equipe gestora** da escola parceira — demonstração assistida do sistema em pleno funcionamento, com simulação de cadastros, montagem manual da grade de uma turma e impressão do relatório —, seguida de treinamento básico de uso e coleta de feedback.
 
 ### Caso necessário, houve mudança de estratégia para alcançar o resultado
 
-> Inicialmente, planejou-se entregar o sistema sob a forma de aplicação hospedada em nuvem, com endereço público acessível a qualquer membro da escola. Durante o desenvolvimento, avaliaram-se sucessivamente as plataformas Railway (que encerrou seu plano gratuito permanente), PythonAnywhere (que passou a restringir o serviço de banco de dados a planos pagos) e provedores externos de MySQL gratuito (cuja política de auto-exclusão de dados após 24 horas tornaria a solução inviável). Para preservar o caráter integralmente gratuito da entrega — premissa do projeto, voltado a escolas públicas sem orçamento — e garantir a confiabilidade da demonstração, optou-se por uma estratégia alternativa: **demonstração presencial assistida** do sistema rodando em ambiente local controlado e **publicação do código-fonte sob licença aberta no GitHub**, acompanhada de guia de instalação detalhado (`DEPLOY.md`). Essa abordagem permite que a instituição parceira ou qualquer escola interessada instale a ferramenta em sua própria infraestrutura no momento e nas condições que julgar apropriados, sem qualquer dependência de provedor externo.
+> Inicialmente, planejou-se entregar o sistema sob a forma de aplicação hospedada em nuvem, com endereço público acessível a qualquer membro da escola. Durante o desenvolvimento, avaliaram-se sucessivamente as plataformas Railway (que encerrou seu plano gratuito permanente), PythonAnywhere (que passou a restringir o serviço de banco de dados a planos pagos) e provedores externos de MySQL gratuito (cuja política de auto-exclusão de dados após 24 horas tornaria a solução inviável). Para preservar o caráter integralmente gratuito da entrega — premissa do projeto, voltado a escolas públicas sem orçamento — e garantir a confiabilidade da demonstração, optou-se por uma estratégia alternativa: **demonstração presencial assistida** do sistema rodando em ambiente local controlado e **publicação do código-fonte sob licença aberta no GitHub**, acompanhada de documentação técnica e instruções de instalação local. Essa abordagem permite que a instituição parceira ou qualquer escola interessada instale a ferramenta no próprio computador no momento e nas condições que julgar apropriados, sem qualquer dependência de provedor externo.
 
 ### Resultado da ação
 
 > Foi entregue à escola parceira um sistema web completo, apresentado em demonstração presencial e disponibilizado gratuitamente em código aberto, capaz de:
 >
-> - **Centralizar o cadastro** de professores, disciplinas, turnos, turmas, locais e horários de aula em um único ambiente.
-> - **Gerar automaticamente** uma proposta de grade horária respeitando a disponibilidade dos professores e a grade curricular, reduzindo o tempo de elaboração de semanas para minutos.
-> - **Detectar conflitos** (mesmo professor em dois lugares, mesma turma em duas aulas simultâneas) que passariam despercebidos no processo manual.
-> - **Imprimir o relatório de grade horária** em formato A4 paisagem, com uma única página por turno e identificação visual por cor de cada disciplina — facilitando a fixação em murais e a divulgação cultural na comunidade escolar.
-> - **Permitir que cada professor consulte** sua própria grade individual via login com senha.
-> - **Controlar o acesso** por perfis (diretor, secretaria, professor) com senhas hasheadas e troca obrigatória no primeiro acesso.
+> - **Centralizar o cadastro** de professores, disciplinas, turmas e horários de aula em um único ambiente, com professores e disciplinas cadastrados de forma independente.
+> - **Registrar a disponibilidade** de cada professor por dia e horário.
+> - **Montar a grade de cada turma manualmente**, com o gestor decidindo cada aula e o sistema oferecendo apenas professores disponíveis e livres — reduzindo o tempo de elaboração e mantendo o controle nas mãos da equipe pedagógica.
+> - **Impedir conflitos** (mesmo professor em dois lugares, mesma turma em duas aulas simultâneas) que passariam despercebidos no processo manual em planilhas.
+> - **Imprimir o relatório de grade horária** em formato A4 paisagem, com uma única página por turma e identificação visual por cor de cada disciplina — facilitando a fixação em murais e a divulgação cultural na comunidade escolar.
+> - **Controlar o acesso** por login de administrador com senha hasheada.
 >
 > O código-fonte foi publicado em <https://github.com/jpnoleto/projeto-extensao-horarios> sob licença aberta, podendo ser adotado por qualquer outra escola sem custos.
 
 ### Conclusão
 
-> A ação extensionista cumpriu seu objetivo de transferir conhecimento técnico universitário diretamente para o cotidiano de uma instituição de ensino público. O sistema entregue substitui um processo manual demorado e suscetível a erros por uma solução automatizada, especialmente útil para a organização das disciplinas culturais e artísticas — Arte, Música, Educação Física e Literatura —, que muitas vezes ficam relegadas a horários residuais por falta de planejamento estruturado. Ao publicar o código sob licença aberta, garante-se que o impacto da ação ultrapasse a escola piloto e alcance qualquer instituição interessada, reforçando o caráter universalizante da extensão universitária.
+> A ação extensionista cumpriu seu objetivo de transferir conhecimento técnico universitário diretamente para o cotidiano de uma instituição de ensino público. O sistema entregue substitui um processo manual demorado e suscetível a erros — feito em planilhas — por uma ferramenta que preserva o controle do gestor sobre a montagem da grade, mas impede conflitos e organiza os cadastros, sendo especialmente útil para a organização das disciplinas culturais e artísticas — Arte, Música, Educação Física e Literatura —, que muitas vezes ficam relegadas a horários residuais por falta de planejamento estruturado. Ao publicar o código sob licença aberta, garante-se que o impacto da ação ultrapasse a escola piloto e alcance qualquer instituição interessada, reforçando o caráter universalizante da extensão universitária.
 
 ### Depoimentos (se houver)
 
@@ -104,11 +106,11 @@ Drafts dos campos do "RELATÓRIO FINAL — ENGENHARIA DE SOFTWARE — PROJETO DE
 
 > A vivência da extensão universitária deste semestre permitiu-me articular, em um único projeto, conhecimentos de diversas disciplinas que compõem a grade do Bacharelado em Engenharia de Software, conectando-os a uma necessidade real da comunidade externa. Ao desenvolver um sistema web para gestão de horários escolares — com ênfase na organização das disciplinas de cunho cultural —, pude perceber como conteúdos teóricos vistos em sala adquirem significado prático quando aplicados a problemas concretos enfrentados por gestores escolares do nosso entorno.
 >
-> No aspecto técnico, o desenvolvimento exigiu domínio simultâneo de várias áreas do curso: a modelagem relacional do banco de dados retomou os fundamentos de Bancos de Dados; a implementação do algoritmo de alocação automática, baseado no heurístico *Most Constrained Variable*, aproximou-me da Inteligência Artificial e dos problemas de satisfação de restrições estudados em teoria; a construção das interfaces e do relatório de impressão envolveu conhecimentos de Interação Homem-Computador e atenção especial à acessibilidade visual; o *hardening* de segurança aplicado antes do deploy mobilizou conteúdos de Segurança da Informação, como hashing de senhas, proteção contra session hijacking e gerenciamento adequado de segredos em variáveis de ambiente.
+> No aspecto técnico, o desenvolvimento exigiu domínio simultâneo de várias áreas do curso: a modelagem relacional do banco de dados retomou os fundamentos de Bancos de Dados; a prototipação de um algoritmo de alocação automática baseado no heurístico *Most Constrained Variable* aproximou-me da Inteligência Artificial e dos problemas de satisfação de restrições — e, sobretudo, ensinou-me a avaliar criticamente quando *não* automatizar: após os testes, decidi que a montagem manual assistida atendia melhor à realidade pedagógica, deixando ao computador o papel de validar disponibilidade e conflitos; a construção das interfaces e do relatório de impressão envolveu conhecimentos de Interação Homem-Computador e atenção especial à acessibilidade visual; as boas práticas de segurança aplicadas mobilizaram conteúdos de Segurança da Informação, como hashing de senhas, proteção contra session hijacking e gerenciamento adequado de segredos em variáveis de ambiente.
 >
 > Sob a perspectiva socioemocional, o contato com a equipe pedagógica da escola parceira evidenciou a importância da comunicação interpessoal. Foi necessário traduzir requisitos pedagógicos vagos em especificações técnicas precisas, ouvir as preocupações dos professores quanto ao novo fluxo e ajustar repetidamente a interface para que se tornasse intuitiva para pessoas sem perfil técnico. A flexibilidade e a capacidade de adaptação foram mobilizadas, sobretudo, quando sucessivas plataformas de hospedagem gratuita avaliadas (Railway, PythonAnywhere, provedores externos de MySQL) deixaram de oferecer seus recursos sem custo durante o desenvolvimento, exigindo a reformulação rápida da estratégia de entrega — que passou a combinar demonstração presencial assistida na escola parceira e publicação do código-fonte sob licença aberta no GitHub —, sem comprometer o cronograma da apresentação nem o caráter gratuito da solução.
 >
-> Quanto ao problema identificado — a elaboração manual e propensa a erros das grades horárias em escolas públicas, que frequentemente relega as disciplinas culturais a horários inadequados —, considero que houve melhoria efetiva. O sistema entregue automatiza o que antes era feito em planilhas eletrônicas, detecta conflitos de alocação automaticamente e produz relatórios prontos para impressão e divulgação no mural da escola, dando às disciplinas culturais a mesma visibilidade gráfica das demais.
+> Quanto ao problema identificado — a elaboração manual e propensa a erros das grades horárias em escolas públicas, que frequentemente relega as disciplinas culturais a horários inadequados —, considero que houve melhoria efetiva. O sistema entregue digitaliza e organiza o que antes era feito em planilhas eletrônicas, impede conflitos de alocação automaticamente durante a montagem e produz relatórios prontos para impressão e divulgação no mural da escola, dando às disciplinas culturais a mesma visibilidade gráfica das demais.
 >
 > A devolutiva da instituição participante reforçou a percepção de que a contribuição é socialmente relevante: ferramentas semelhantes disponíveis no mercado têm custo proibitivo para escolas públicas, e o caráter de código aberto deste projeto garante que outras escolas da rede possam adotá-lo sem investimento financeiro. Encerro a extensão convicto de que a Engenharia de Software, quando colocada a serviço da comunidade externa, transcende sua dimensão técnica e converte-se em instrumento concreto de transformação social — e, no caso específico deste programa, de difusão cultural por meio da valorização das disciplinas artísticas no cotidiano escolar.
 
@@ -153,12 +155,12 @@ Sugestão de respostas (marque com **X** no formulário do AVA):
 
 | Pergunta | Nota sugerida | Justificativa |
 |---|---|---|
-| 1. Permitiu o desenvolvimento articulando competências e conteúdos do curso | **10** | Mobilizou IA (MCV), BD (MySQL), IHC (interface), Segurança (hardening), Algoritmos (estruturas de dados), Programação (Python/Flask) |
+| 1. Permitiu o desenvolvimento articulando competências e conteúdos do curso | **10** | Mobilizou IA (estudo do MCV e decisão de projeto sobre automação), BD (MySQL), IHC (interface e usabilidade), Segurança (hashing/sessão), Algoritmos e Programação (Python/Flask) |
 | 2. Carga horária suficiente | **8** | Suficiente, mas projetos reais sempre se prolongam; foi necessário muito tempo extra |
 | 3. Relevância para a formação | **10** | Projeto full-stack do zero, com deploy em produção e usuário real |
 | 4. Contribui para os objetivos da IES e Curso | **10** | Aplicou diretamente o perfil do egresso (formação atualizada, criativa, ética) |
 | 5. Contribuição para a melhoria da sociedade | **10** | Código aberto, hospedagem gratuita, atende escolas públicas que não pagariam por sistema comercial |
-| 6. Permite ações de Iniciação Científica e Ensino | **9** | O algoritmo MCV abre espaço para artigos e o sistema é replicável em outras escolas |
+| 6. Permite ações de Iniciação Científica e Ensino | **9** | A discussão "automatizar × montagem manual assistida" abre espaço para artigos e o sistema é replicável em outras escolas |
 | 7. Detalhamento / sugestão adicional (opcional) | — | Sugestão: ampliar para dois semestres, permitindo que o aluno acompanhe o uso do sistema em produção e colete métricas reais de adoção |
 
 ---
@@ -168,5 +170,5 @@ Sugestão de respostas (marque com **X** no formulário do AVA):
 - Repositório: <https://github.com/jpnoleto/projeto-extensao-horarios>
 - Documentação técnica completa: `CLAUDE.md` (raiz)
 - Documentação acadêmica: `DOCUMENTACAO_PROJETO.md` (raiz)
-- Guia de deploy: `DEPLOY.md` (raiz)
+- Instalação e execução local: seção "Comandos Essenciais" do `CLAUDE.md`
 - Template de pedido de depoimento: `PEDIDO_DEPOIMENTO.md` (raiz)
